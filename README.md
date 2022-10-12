@@ -106,7 +106,7 @@ say j.eval('(+/ % #) 3 1 4 1 5 9');
 
 free
 ----
-This calls the `JFree` C function to free the J interpreters memory. Ideally, this should not need to be run, as `Inline::J` objects call this method on `DESTROY`. However, during beta testing of this module, I did occasionally run into memory leak issues, which have not occurred when I manually run `free` at `END`.
+This calls the `JFree` C function to free the J interpreters memory. Ideally, this should not need to be run, as `Inline::J` objects call this method on `DESTROY`.
 
 ```raku
 END { j.free }
