@@ -39,18 +39,16 @@ WARNING
 
 This module is under development and is currently  classified as beta software. As such, the API is subject to change at any time, and there is likely to be bugs. The use of this module in Production is not recommended. With that out of the way...
 
-NOTES
-=====
-
-To install this module you need to have J already installed. See the [J Software Wiki](https://code.jsoftware.com/wiki/System/Installation) for more info.
 
 INSTALLATION
 ============
 
-The module will attempt - poorly - to locate the `bin` file where J is installed. If installation fails, you may need to have the bin location exported to `JBINPATH` and try again. Suggestions on better ways on how to handle this are welcome.
+To install this module you need to have J already installed. See the [J Software Wiki](https://code.jsoftware.com/wiki/System/Installation) for more info.
 
-Construction
-------------
+The module will attempt - poorly - to locate the `bin` path where J is installed. If installation fails, you can export the `bin` location the enviroment variable `JBINPATH` and try again. Suggestions on better ways on how to handle this are welcome.
+
+GETTING STARTED
+===============
 
 The start using `Inline::J`, first create a new `Inline::J` object.
 To load the default J profile, pass a truthy value to the `load-profile` named argument.
@@ -131,7 +129,7 @@ say $a;
 # 5 6 7
 ```
 
-NOTE: The J noun will be erased and it's storage freed when the Raku variable is destroyed by the GC.
+**NOTE:** The J noun will be erased and it's storage freed when the Raku variable is destroyed by the GC.
 
 Alternatively, you can declare a new variable in J by also providing an expression
 
@@ -154,8 +152,6 @@ say $v.name;
 ## Inline::J::Noun
 
 An `Inline::J::Noun` (`IJN`) object references a noun in J. The `gist` of this object is the J representation of this noun.
-
-NOTE: The J noun will be erased and it's storage freed when the Raku variable is destroyed by the GC.
 
 **EXPERIMENTAL:** Currently, an `IJN` stringifies to it's name. This allows them to be interpolated into J expressions.
 

@@ -21,16 +21,16 @@ sub JErrorTextM(Pointer, int64, Pointer[Str] is rw) returns int64 is native(LIB)
 class Inline::J::Noun { ... }
 class Inline::J::Verb { ... }
 
-class Inline::J:ver<0.0.2>:auth<zef:elcaro> {
+class Inline::J:ver<0.0.3>:auth<zef:elcaro> {
     has $!jt;
     has Bool $!profile-loaded;
     
     submethod BUILD($!jt=JInit(), :$load-profile) {
-        if $load-profile {
-            self.load-profile
-        }
         # Increase output rows (for 3!:3)
         self.eval('(9!:37) 0 2256 0 2222');
+        if $load-profile {
+            self.load-profile;
+        }
     }
 
     method load-profile(:$binpath=BIN, :$profile=PRO) {
