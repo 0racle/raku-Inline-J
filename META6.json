@@ -20,5 +20,5 @@
         "NativeCall",
         "NativeHelpers::Blob"
     ],
-    "source-url": "github.com/0racle/raku-Inline-J.git"
+    "source-url": "https://github.com/0racle/raku-Inline-J"
 }
