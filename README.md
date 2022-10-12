@@ -42,6 +42,13 @@ This module is under development and is currently  classified as beta software. 
 NOTES
 =====
 
+To install this module you need to have J already installed. See the [J Software Wiki](https://code.jsoftware.com/wiki/System/Installation) for more info.
+
+INSTALLATION
+============
+
+The module will attempt - poorly - to locate the `bin` file where J is installed. If installation fails, you may need to have the bin location exported to `JBINPATH` and try again. Suggestions on better ways on how to handle this are welcome.
+
 Construction
 ------------
 
