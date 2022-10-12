@@ -1,0 +1,23 @@
+{
+    "name": "Inline::J",
+    "auth": "zef:elcaro",
+    "version":  "0.0.1",
+    "api": "1",
+    "description": "Use the J programming language inside Raku",
+    "tags": [ "Array", "Matrix", "APL" ],
+    "authors": [ "zef:elcarlo" ],
+    "license": "Artistic-2.0",
+    "raku": "6.d",
+    "provides" : {
+        "Inline::J::Conversion" : "lib/Inline/J/Conversion.rakumod",
+        "Inline::J::Datatype" : "lib/Inline/J/Datatype.rakumod",
+        "Inline::J::Helper" : "lib/Inline/J/Helper.rakumod",
+        "Inline::J::Utils" : "lib/Inline/J/Utils.rakumod"
+    },
+    "depends": [
+        "Exportable",
+        "NativeCall",
+        "NativeHelpers::Blob"
+    ],
+    "source-url": "github.com/0racle/raku-Inline-J.git"
+}
