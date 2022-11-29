@@ -1,7 +1,7 @@
 NAME
 ===
 
-Inline::J - Use the [J programming language](https://jsoftware.com) inside Raku.
+Inline::J - Use the [J programming language](https://www.jsoftware.com) inside Raku.
 
 SYNOPSIS
 ========
@@ -268,13 +268,14 @@ J scalars, lists, and matrices can be converted to Raku scalars and arrays. Curr
 
 Currently the only J datatypes supported are:
 
- * boolean  : Bool
- * literal  : Str
- * integer  : Int
- * floating : Num
- * unicode4 : Str
+ * boolean  -> Bool
+ * literal  -> Str
+ * integer  -> Int
+ * floating -> Num
+ * unicode4 -> Str
 
-unicode4 values are stored as UTF-16 in J, but normalised to UTF-8 when converted to Raku
+unicode4 values are stored as UTF-16 in J, but normalised to UTF-8 when converted to Raku.
+
 Current notable omissions are 'extended', 'rational', and 'complex' numbers, as well as 'boxed' arrays.
 
 getm
@@ -299,7 +300,7 @@ Note however, that `Inline::J::Noun` objects also have a `getm` method available
 my $arr = $m.getm;
 ```
 
-As stated, the Raku array returns is shaped and typed.
+As stated, the Raku array returned is shaped and typed.
 
 ```raku
 say  $arr.^name => $arr.shape;
@@ -334,16 +335,16 @@ Raku to J
 
 **WARNING:** Barely developed.
 
-Currently on Raku shaped and typed Arrays can b converted to J arrays and matrices.
+Currently, only Raku shaped and typed Arrays can b converted to J arrays and matrices.
 
-Currently the only Raku types supported are:
+The only Raku types currently supported are:
 
- * Bool : boolean
- * Str  : literal (or unicode\*)
- * Int  : integer
- * Num  : floating
+ * Bool -> boolean
+ * Str  -> literal (or unicode\*)
+ * Int  -> integer
+ * Num  -> floating
 
-\* When converting an Array of Str to J, `Inline::J` will check if any codepoints are > 255, and if so, the Str's are encoded as UTF-16 before passing to J.
+\* When converting an Array of Str to J, `Inline::J` will check if any codepoints are > 255, and if so, the Str's are encoded as UTF-16 (J's `unicode4`) before passing to J.
 
 setm
 ----
