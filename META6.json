@@ -5,7 +5,7 @@
     "api": "1",
     "description": "Use the J programming language inside Raku",
     "tags": [ "Array", "Matrix", "APL" ],
-    "authors": [ "zef:elcarlo" ],
+    "authors": [ "zef:elcaro" ],
     "license": "Artistic-2.0",
     "raku": "6.d",
     "provides" : {
