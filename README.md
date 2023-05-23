@@ -45,7 +45,7 @@ INSTALLATION
 
 To install this module you need to have J already installed. See the [J Software Wiki](https://code.jsoftware.com/wiki/System/Installation) for more info.
 
-The module will attempt - poorly - to locate the `bin` path where J is installed. If installation fails, you can export the `bin` location the enviroment variable `JBINPATH` and try again. Suggestions on better ways on how to handle this are welcome.
+The module will attempt - poorly - to locate the `bin` path where J is installed. If installation fails, you can export the `bin` location the environment variable `JBINPATH` and try again. Suggestions on better ways on how to handle this are welcome.
 
 GETTING STARTED
 ===============
@@ -181,13 +181,17 @@ say $m;
 # 16 17 18 19
 # 20 21 22 23
 
-say $m.elems; # is coerced to Raku Int
+say $m.elems; # --> Int
+# 24
+
+say $m.tally; # --> Int
 # 2
 
-say $m.shape; # is coerced to Raku Seq of Int
+say $m.shape; # --> Seq of Int
 # (2 3 4)
 
-say $m[1;0];  # EXPERIMENTAL: returns Str from j.eval
+# EXPERIMENTAL
+say $m[1;0];  # --> Str (from j.eval)
 # 12 13 14 15
 ```
 
@@ -195,9 +199,11 @@ say $m[1;0];  # EXPERIMENTAL: returns Str from j.eval
 
 Similar to `IJN`'s, an `Inline::J::Verb` (`IJV`) object references a verb defined in J. The object `does Callable` so that it acts like a Raku function.
 
-**LIMITATION:** Currently `IJV` callables only accept `IJN`'s, or Raku `Real` numbers. `Real` are just stringified and interpreted by J.
+**LIMITATION:** Currently `IJV` callables only accept `IJN`'s, or Raku `Real` numbers. `Real` are just _stringified_ and interpreted by J.
 
-Callables accept 0, 1, or 2 arguments. When calling with 0 arguments, the J function is actually called with the empty string value.
+**UPDATE** I've added initial support for passing `Array[Int]`'s lists (_not_ nested lists / matrices).
+
+Callables accept 0, 1, or 2 arguments. When calling with 0 arguments, the J function is actually called with the empty string value. `IJV`'s will call `j.noun`, and hence, return an `IJN` which you can (attempt to) convert to a Raku type by calling `.getm` on the returned value.
 
 ```raku
 my &f = j.verb('>:');
@@ -254,7 +260,8 @@ my &sum-sq-diff = &f ∘ &g ∘ &h;
 say sum-sq-diff($x, $y);
 # 2
 ```
-This is useful because currently `IJV`s return the result of an `eval` - which is a string - and cannot be passed to another `IJV`.
+
+**NOTE:** Doing the compose (`∘`) _in J_ avoids unnecessary `IJN` creation, which happens when `IJV`'s return data to Raku.
 
 DATA CONVERSION
 ===============
@@ -419,6 +426,8 @@ Potentially it could depend on the type it accepts, eg. For functions who's RHS 
 In the first case, returning `IJN`'s results in the creation of noun's in J unnecessarily. A potentially work around is a reserved noun that is reused for return values.
 
 In the second case, returning Raku data may result in unnecessary overhead of data conversion when it may not be needed (or wanted) by the user.
+
+*UPDATE* I've decided! They now return `IJN`'s. The reason is, if I'm calling a function in Raku, I want something I can use in Raku. Returning an eval'd string requires parsing on the Raku side, where as returning an `IJN` simply requires a call to `.getm` (or maybe `.gets`). Users wishing to avoid overhead of calling a lot of `IJV`'s should instead call them _in_ J, eg. via `j.eval`.
 
   * How does this module handle threading and race conditions
 

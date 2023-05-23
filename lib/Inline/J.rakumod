@@ -21,7 +21,7 @@ sub JErrorTextM(Pointer, int64, Pointer[Str] is rw) returns int64 is native(LIB)
 class Inline::J::Noun { ... }
 class Inline::J::Verb { ... }
 
-class Inline::J:ver<0.0.3>:auth<zef:elcaro> {
+class Inline::J:ver<0.0.4>:auth<zef:elcaro> {
     has $!jt;
     has Bool $!profile-loaded;
     
@@ -155,6 +155,10 @@ class Inline::J::Noun {
     }
 
     method elems() {
+        self!monadic('#@,').Int
+    }
+
+    method tally() {
         self!monadic('#').Int
     }
 
@@ -202,19 +206,22 @@ class Inline::J::Verb does Callable {
     }
 
     multi submethod CALL-ME() {
-        $!ij.eval("($!name) ''")
+        $!ij.noun("($!name) ''")
     }
     multi submethod CALL-ME(Inline::J::Noun $y) {
-        $!ij.eval("($!name) $y")
+        $!ij.noun("($!name) $y")
     }
     multi submethod CALL-ME(Inline::J::Noun $x, Inline::J::Noun $y) {
-        $!ij.eval("$x ($!name) $y")
+        $!ij.noun("$x ($!name) $y")
     }
     multi submethod CALL-ME(Real $y) {
-        $!ij.eval("($!name) $y")
+        $!ij.noun("($!name) $y")
     }
     multi submethod CALL-ME(Real $x, Real $y) {
-        $!ij.eval("$x ($!name) $y")
+        $!ij.noun("$x ($!name) $y")
+    }
+    multi submethod CALL-ME(Array[Int] $y where *.shape.elems == 1) {
+        $!ij.noun("($!name) ($y)")
     }
 
     method rank {
