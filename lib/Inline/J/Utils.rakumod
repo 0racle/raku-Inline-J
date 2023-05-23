@@ -24,8 +24,12 @@ module Inline::J::Utils {
         $x ~~ List ?? ($x.elems, |infer-shape($x[0])) !! ()
     }
 
-    our sub hex-unpack($hex) is exportable {
+    our proto hex-unpack(|) is exportable { * }
+    our multi hex-unpack($hex, $endian=LittleEndian) {
         $hex.comb(2).reverse.join.parse-base(16)
+    }
+    our multi hex-unpack($hex, BigEndian) {
+        $hex.comb(2).join.parse-base(16)
     }
 
 

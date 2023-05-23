@@ -147,6 +147,12 @@ multi getm-conv(Inline::J::Datatype::unicode4, $data, $elems, @shape, :$raw) {
     fail("{Inline::J::Datatype::unicode4} values unsupported. Use :raw");
 }
 
+multi getm-conv(Inline::J::Datatype::boxed, $data, $elems, @shape, :$raw) {
+    if $raw {
+        return %(:$elems, :@shape, :$data, datatype => Inline::J::Datatype::boxed)
+    }
+}
+
 multi getm-conv($type, |c) {
     fail("{Inline::J::Datatype($type)} values are currently unsupported for getm");
 }
