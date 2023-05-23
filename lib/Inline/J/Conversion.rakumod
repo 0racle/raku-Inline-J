@@ -3,7 +3,7 @@ unit module Inline::J::Conversion;
 use NativeCall;
 use NativeHelpers::Blob;
 
-use Inline::J::Utils < batched shaped reshape hex-unpack >;
+use Inline::J::Utils < batched shaped reshape hex-unpack utf32-to-utf8 >;
 use Inline::J::Datatype;
 
 our sub setm-values($a) {
@@ -139,12 +139,12 @@ multi getm-conv(Inline::J::Datatype::unicode, $data, $elems, @shape, :$raw) {
 }
 
 multi getm-conv(Inline::J::Datatype::unicode4, $data, $elems, @shape, :$raw) {
-    # XXX Rakudo currently does not have a UTF-32 decoder
     my $buf = blob-from-pointer(Pointer.new($data), elems => $elems × 4);
     if $raw {
         return %(:$elems, :@shape, :$buf, datatype => Inline::J::Datatype::unicode4)
     }
-    fail("{Inline::J::Datatype::unicode4} values unsupported. Use :raw");
+    my $str = utf32-to-utf8($buf);
+    return shaped($str.comb, :@shape, :type(Str));
 }
 
 multi getm-conv(Inline::J::Datatype::boxed, $data, $elems, @shape, :$raw) {
