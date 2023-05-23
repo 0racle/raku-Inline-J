@@ -17,7 +17,7 @@ module Inline::J::Helper {
         }
         else {
             for ($*HOME, '/opt'.IO) -> $dir {
-                if $dir.dir(:$test) -> @paths {
+                if $dir.dir(:$test).sort -> @paths {
                     return @paths.reverse.first.child('bin')
                 }
             }
