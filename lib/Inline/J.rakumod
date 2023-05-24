@@ -154,16 +154,20 @@ class Inline::J::Noun {
         Inline::J::Datatype(self!monadic('(3!:0)'))
     }
 
-    method elems() {
-        self!monadic('#@,').Int
+    method shape() {
+        self!monadic('$').words.map(*.Int)
     }
 
     method tally() {
         self!monadic('#').Int
     }
 
-    method shape() {
-        self!monadic('$').words.map(*.Int)
+    method rank() {
+        self!monadic('#@$').Int
+    }
+
+    method elems() {
+        self!monadic('*/@$').Int
     }
 
     method AT-POS(*@n) {

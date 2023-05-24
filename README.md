@@ -37,21 +37,21 @@ say j.gets(‘2 5 $ 'HelloWorld'’);
 WARNING
 =======
 
-This module is under development and is currently  classified as beta software. As such, the API is subject to change at any time, and there is likely to be bugs. The use of this module in Production is not recommended. With that out of the way...
-
+This module is under development. As such, the API is subject to change at any time, and there might be bugs.
+The use of this module in Production is not recommended.
 
 INSTALLATION
 ============
 
 To install this module you need to have J already installed. See the [J Software Wiki](https://code.jsoftware.com/wiki/System/Installation) for more info.
 
-The module will attempt - poorly - to locate the `bin` path where J is installed. If installation fails, you can export the `bin` location the environment variable `JBINPATH` and try again. Suggestions on better ways on how to handle this are welcome.
+The module will attempt to locate the `bin` path where J is installed. If installation fails, you can export the `bin` location the environment variable `JBINPATH` and try again. Suggestions on better ways on how to handle this are welcome.
 
 GETTING STARTED
 ===============
 
 The start using `Inline::J`, first create a new `Inline::J` object.
-To load the default J profile, pass a truthy value to the `load-profile` named argument.
+To load the default J profile, pass a truthy `load-profile` named argument.
 You should `load-profile` if you wish to use names defined in the [Standard Library](https://code.jsoftware.com/wiki/Standard_Library/Overview).
 
 ```raku
@@ -60,7 +60,7 @@ say j.eval(‘toupper 'hello, world!'’);
 # HELLO, WORLD!
 ```
 
-You can also use the load-profile method, which return `self`.
+Alternatively you can use the `load-profile` method, which return `self`.
 ```raku
 my \y = Inline::J.new.load-profile;
 ```
@@ -81,7 +81,7 @@ do
 
 The `do` method accepts a single J expression and passes it to the J interpreter. Any non-Str values will be coerced to a Str.
 
-If there are any errors, it will return a failure with the error message.
+If there are any errors, it will return a [Failure](https://docs.raku.org/type/Failure) with the error message.
 
 This method returns `self`, so that multiple expressions can be chained.
 
@@ -109,6 +109,8 @@ say j.eval('(+/ % #) 3 1 4 1 5 9');
 # 3.83333
 ```
 
+Since this wraps `do`, the `eval` method can also return a Failure.
+
 free
 ----
 This calls the `JFree` C function to free the J interpreters memory. Ideally, this should not need to be run, as `Inline::J` objects call this method on `DESTROY`.
@@ -121,7 +123,7 @@ noun
 ----
 This method creates an `Inline::J::Noun` object that references a noun in J. The `gist` of this object is the J representation of this noun.
 
-If a noun already exists, you can create an `Inline::J::Noun` simply by providing it's name.
+If a noun already exists in J, you can create an `Inline::J::Noun` by providing it's name.
 
 ```raku
 my $a = j.noun(name => 'a');
@@ -129,7 +131,7 @@ say $a;
 # 5 6 7
 ```
 
-**NOTE:** The J noun will be erased and it's storage freed when the Raku variable is destroyed by the GC.
+**NOTE:** When an Inline::J::Noun object is `DESTROY`'d, the J noun will be erased and it's storage freed by calling `(4!:55) <'name'` in J.
 
 Alternatively, you can declare a new variable in J by also providing an expression
 
@@ -168,10 +170,21 @@ say j.eval("a + {$b.name}");
 
 Which is not as much fun.
 
-`IJN` objects hold a copy of the J interpreter that created them, which facilitates the following methods (which are `eval`d by the J interpreter)
+### Methods
+
+The following examples will use the following value
 
 ```raku
 my $m = j.noun('2 3 4 $ i. 24');
+```
+
+gist
+----
+
+Returns the J representation of the noun
+An objects `.gist` method is called automatically by `say`.
+
+```raku
 say $m;
 #  0  1  2  3
 #  4  5  6  7
@@ -180,18 +193,96 @@ say $m;
 # 12 13 14 15
 # 16 17 18 19
 # 20 21 22 23
+```
 
-say $m.elems; # --> Int
-# 24
+name (Str)
+----------
 
-say $m.tally; # --> Int
-# 2
+Returns the name of the noun in J, which may be different from the variable name in Raku, and is randomly generated when not specified
 
-say $m.shape; # --> Seq of Int
+This method is also called when coercing the object to a string (eg. `$m.Str`, `"$m"`, `~$m`, `put $m`, etc.)
+
+```raku
+say $m.name;
+# ijn_f39324d1
+```
+
+datatype
+--------
+
+Returns an Inline::J::Datatype enum.
+
+The numeric value of the enum will match J's type identifier
+
+```raku
+say $m.datatype;
+# integer
+say +$m.datatype;
+# 4
+```
+
+shape
+-----
+
+Returns a Seq of Ints that count the length (number of items) in each axis.
+
+```
+say $m.shape;
 # (2 3 4)
+```
 
-# EXPERIMENTAL
-say $m[1;0];  # --> Str (from j.eval)
+tally
+-----
+
+Returns an Int of the count of _items_ in the array.
+
+As per the J documentation
+
+    > The items of an array are the cells whose rank is 1 lower than the rank of the array.
+    > Thus, the items of a list are atoms, and the items of a table are lists.
+
+The tally can also be derived from the shape by taking the first element of the shape.
+
+```raku
+say $m.tally;
+# 2
+```
+
+rank
+----
+
+Returns an Int of the count of axis in the array.
+
+The rank can be derived from the shape by taking the count of element of the shape.
+
+```raku
+say $m.rank;
+# 3
+```
+
+elems
+-----
+
+Returns an Int of the total count of scalar items in the array
+
+The elems can be derived from the shape by taking the product of the shape.
+
+```raku
+say $m.elems;
+# 24
+```
+
+AT-POS
+------
+
+**EXPERIMENTAL**
+
+I've added an `.AT-POS` method (which is called when you index into an object).
+
+Currently this just returns a string from J.
+
+```raku
+say $m[1;0];
 # 12 13 14 15
 ```
 
@@ -275,13 +366,15 @@ J scalars, lists, and matrices can be converted to Raku scalars and arrays. Curr
 
 Currently the only J datatypes supported are:
 
- * boolean  -> Bool
- * literal  -> Str
- * integer  -> Int
- * floating -> Num
- * unicode4 -> Str
+  * boolean  -> Bool
+  * literal  -> Str
+  * integer  -> Int
+  * floating -> Num
+  * unicode  -> Str
+  * unicode4 -> Str  (**EXPERIMENTAL**)
 
-unicode4 values are stored as UTF-16 in J, but normalised to UTF-8 when converted to Raku.
+unicode values are encoded as UTF-16 in J, but normalised to UTF-8 when converted to Raku.
+unicode4 values are encoded as UTF-32 in J. Raku (specifically, it's VM) does not have a UTF-32 decoder, so I have written a naïve `utf32-to-utf8` function in pure Raku, which may be buggy, and is likely to be slow on large inputs.
 
 Current notable omissions are 'extended', 'rational', and 'complex' numbers, as well as 'boxed' arrays.
 
@@ -342,16 +435,16 @@ Raku to J
 
 **WARNING:** Barely developed.
 
-Currently, only Raku shaped and typed Arrays can b converted to J arrays and matrices.
+Currently, only Raku shaped and typed Arrays can be converted to J arrays and matrices.
 
 The only Raku types currently supported are:
 
- * Bool -> boolean
- * Str  -> literal (or unicode\*)
- * Int  -> integer
- * Num  -> floating
+  * Bool -> boolean
+  * Str  -> literal (or unicode\*)
+  * Int  -> integer
+  * Num  -> floating
 
-\* When converting an Array of Str to J, `Inline::J` will check if any codepoints are > 255, and if so, the Str's are encoded as UTF-16 (J's `unicode4`) before passing to J.
+\* When converting an Array of Str to J, `Inline::J` will check if any codepoints are > 255, and if so, the Str's are encoded as UTF-16 (J's `unicode`) before passing to J.
 
 setm
 ----
@@ -409,30 +502,8 @@ Pull request welcome.
 FINAL THOUGHTS
 ==============
 
-I'm not a C programmer, and I've barely used NativeCall in the past, so it's entirely possibly I'm doing things in a less-than-optimum way. If anyone is a NativeCall guru, I would appreciate and feedback on whether there are better ways I could be handling the data conversions. The header file for `libj` is [here](https://github.com/jsoftware/jsource/blob/7a3945dc6f46176fd9c7741477c677ed114f32b0/jsrc/jlib.h).
+I'm not a C programmer, and I've barely used NativeCall in the past, so it's entirely possibly I'm doing things in a less-than-optimum way. If anyone is a C/NativeCall guru, I would appreciate and feedback on whether there are better ways I could be handling the data conversions. The header file for `libj` is [here](https://github.com/jsoftware/jsource/blob/7a3945dc6f46176fd9c7741477c677ed114f32b0/jsrc/jlib.h).
 
 So far it's just been me playing around with this module, trying to work out what useful methods and functionality would be useful. I haven't had a good look at it, but a potential source to mine ideas from is [Py'n'APL](https://github.com/Dyalog/pynapl/) library.
 
 In general, I'm open to feedback from fellow J+Raku users on settling on the API of this module.
-
-QUESTIONS WITH NO CURRENT ANSWERS
-=================================
-
-  * What should an `Inline::J::Verb` return?
-
-Theoretically, `IJV`'s could accept Raku data. Should they return Raku data, or an `IJN`?
-Potentially it could depend on the type it accepts, eg. For functions who's RHS (`y`) argument is an `IJN`, then perhaps an `IJN` should be returns, and for functions who's `y` argument is Raku data, it could return Raku data.
-
-In the first case, returning `IJN`'s results in the creation of noun's in J unnecessarily. A potentially work around is a reserved noun that is reused for return values.
-
-In the second case, returning Raku data may result in unnecessary overhead of data conversion when it may not be needed (or wanted) by the user.
-
-*UPDATE* I've decided! They now return `IJN`'s. The reason is, if I'm calling a function in Raku, I want something I can use in Raku. Returning an eval'd string requires parsing on the Raku side, where as returning an `IJN` simply requires a call to `.getm` (or maybe `.gets`). Users wishing to avoid overhead of calling a lot of `IJV`'s should instead call them _in_ J, eg. via `j.eval`.
-
-  * How does this module handle threading and race conditions
-
-Not at all, I imagine, and I would expect bugs and undefined behaviour. On a related note, the next version of J has support for thunks / deferred calculations, which I also have no ideas on how that could be integrated with Raku's "mostly lazy" evaluation.
-
-  * Should I move these questions to Github Issues
-
-Maybe... Probably.
