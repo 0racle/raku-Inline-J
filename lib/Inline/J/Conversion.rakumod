@@ -56,7 +56,8 @@ our sub setm-values($a) {
             nativecast(Pointer[int64], CArray[num64].new($a.List)).Int;
         }
         default {
-            fail("{Inline::J::Datatype($type)} values are currently unsupported for setm");
+            my $datatype = Inline::J::Datatype($type);
+            fail("$datatype values are currently unsupported for setm");
         }
     }
 
@@ -76,18 +77,27 @@ proto sub getm-conv(|) { * }
 multi getm-conv(Inline::J::Datatype::boolean, $data, $elems, @shape, :$raw) {
     my $buf = blob-from-pointer(Pointer.new($data), :$elems);
     if $raw {
-        return %(:$elems, :@shape, :$buf, datatype => Inline::J::Datatype::boolean)
+        return %(
+            :$elems, :@shape, :$buf,
+            datatype => Inline::J::Datatype::boolean
+        )
     }
     if !@shape {
         return $buf.read-int8(0).Bool
     }
-    return shaped((0 ..^ $elems).map(-> $o { Bool($buf.read-int8($o)) }), :@shape, :type(Bool));
+    return shaped(
+        (0 ..^ $elems).map(-> $o { Bool($buf.read-int8($o)) }),
+        :@shape, :type(Bool)
+    );
 }
 
 multi getm-conv(Inline::J::Datatype::literal, $data, $elems, @shape, :$raw) {
     my $buf = blob-from-pointer(Pointer.new($data), :$elems);
     if $raw {
-        return %(:$elems, :@shape, :$buf, datatype => Inline::J::Datatype::literal)
+        return %(
+            :$elems, :@shape, :$buf,
+            datatype => Inline::J::Datatype::literal
+        )
     }
     my $str = $buf.decode('UTF8');
     if !@shape {
@@ -99,29 +109,44 @@ multi getm-conv(Inline::J::Datatype::literal, $data, $elems, @shape, :$raw) {
 multi getm-conv(Inline::J::Datatype::integer, $data, $elems, @shape, :$raw) {
     my $buf = blob-from-pointer(Pointer.new($data), elems => $elems × 8);
     if $raw {
-        return %(:$elems, :@shape, :$buf, datatype => Inline::J::Datatype::Datatype::integer)
+        return %(
+            :$elems, :@shape, :$buf,
+            datatype => Inline::J::Datatype::Datatype::integer
+        )
     }
     if !@shape {
         return $buf.read-int64(0).Int
     }
-    return shaped((0 ..^ $elems).map(-> $o { $buf.read-int64($o × 8) }), :@shape, :type(Int));
+    return shaped(
+        (0 ..^ $elems).map(-> $o { $buf.read-int64($o × 8) }),
+        :@shape, :type(Int)
+    );
 }
 
 multi getm-conv(Inline::J::Datatype::floating, $data, $elems, @shape, :$raw) {
     my $buf = blob-from-pointer(Pointer.new($data), elems => $elems × 8);
     if $raw {
-        return %(:$elems, :@shape, :$buf, datatype => Inline::J::Datatype::floating)
+        return %(
+            :$elems, :@shape, :$buf,
+            datatype => Inline::J::Datatype::floating
+        )
     }
     if !@shape {
         return $buf.read-num64(0).Num
     }
-    return shaped((0 ..^ $elems).map(-> $o { $buf.read-num64($o × 8) }), :@shape, :type(Num));
+    return shaped(
+        (0 ..^ $elems).map(-> $o { $buf.read-num64($o × 8) }),
+        :@shape, :type(Num)
+    );
 }
 
 multi getm-conv(Inline::J::Datatype::complex, $data, $elems, @shape, :$raw) {
     my $buf = blob-from-pointer(Pointer.new($data), elems => $elems × 16);
     if $raw {
-        return %(:$elems, :@shape, :$buf, datatype => Inline::J::Datatype::complex)
+        return %(
+            :$elems, :@shape, :$buf,
+            datatype => Inline::J::Datatype::complex
+        )
     }
     fail("{Inline::J::Datatype::complex} values unsupported. Use :raw");
 }
@@ -135,7 +160,10 @@ multi getm-conv(Inline::J::Datatype::complex, $data, $elems, @shape, :$raw) {
 multi getm-conv(Inline::J::Datatype::unicode, $data, $elems, @shape, :$raw) {
     my $buf = blob-from-pointer(Pointer.new($data), elems => $elems × 2);
     if $raw {
-        return %(:$elems, :@shape, :$buf, datatype => Inline::J::Datatype::unicode)
+        return %(
+            :$elems, :@shape, :$buf,
+            datatype => Inline::J::Datatype::unicode
+        )
     }
     my $str = $buf.decode('UTF-16');
     if !@shape {
@@ -147,7 +175,10 @@ multi getm-conv(Inline::J::Datatype::unicode, $data, $elems, @shape, :$raw) {
 multi getm-conv(Inline::J::Datatype::unicode4, $data, $elems, @shape, :$raw) {
     my $buf = blob-from-pointer(Pointer.new($data), elems => $elems × 4);
     if $raw {
-        return %(:$elems, :@shape, :$buf, datatype => Inline::J::Datatype::unicode4)
+        return %(
+            :$elems, :@shape, :$buf,
+            datatype => Inline::J::Datatype::unicode4
+        )
     }
     my $str = utf32-to-utf8($buf);
     return shaped($str.comb, :@shape, :type(Str));
@@ -155,15 +186,19 @@ multi getm-conv(Inline::J::Datatype::unicode4, $data, $elems, @shape, :$raw) {
 
 multi getm-conv(Inline::J::Datatype::boxed, $data, $elems, @shape, :$raw) {
     if $raw {
-        return %(:$elems, :@shape, :$data, datatype => Inline::J::Datatype::boxed)
+        return %(
+            :$elems, :@shape, :$data,
+            datatype => Inline::J::Datatype::boxed
+        )
     }
 }
 
 multi getm-conv($type, |c) {
-    fail("{Inline::J::Datatype($type)} values are currently unsupported for getm");
+    my $datatype = Inline::J::Datatype($type);
+    fail("$datatype values are currently unsupported for getm");
 }
 
-our sub gets-data($type, $tally, $dims, @data, :$raw, :$list) {
+our sub gets-data($type, $tally, $dims, @data, $expr, :$raw, :$list) {
     my $datatype = Inline::J::Datatype(hex-unpack($type));
     my $elems = hex-unpack($tally);
     my @shape = @data.splice(0, hex-unpack($dims)).map(&hex-unpack);
@@ -205,7 +240,14 @@ our sub gets-data($type, $tally, $dims, @data, :$raw, :$list) {
             return $str if !@shape;
             return $list
               ?? batched($str.comb.head($elems), :@shape)
-              !! shaped($str.comb.head($elems), :@shape)
+              !! shaped($str.comb.head($elems), :@shape, :type(Str))
+        }
+        when Inline::J::Datatype::unicode4 {
+            my $str = utf32-to-utf8($buf);
+            return $str if !@shape;
+            return $list
+              ?? batched($str.comb.head($elems), :@shape)
+              !! shaped($str.comb.head($elems), :@shape, :type(Str))
         }
         default {
             fail("{$datatype} values are currently unsupported for gets");

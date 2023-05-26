@@ -21,7 +21,7 @@ sub JErrorTextM(Pointer, int64, Pointer[Str] is rw) returns int64 is native(LIB)
 class Inline::J::Noun { ... }
 class Inline::J::Verb { ... }
 
-class Inline::J:ver<0.1.4>:auth<zef:elcaro> {
+class Inline::J:ver<0.1.5>:auth<zef:elcaro> {
     has $!jt;
     has Bool $!profile-loaded;
     
@@ -111,7 +111,9 @@ class Inline::J:ver<0.1.4>:auth<zef:elcaro> {
     #| but it also requires that the noun already exists in J.
     method gets($expr, |c) {
         my ($, $type, $tally, $dims, *@data) = self.eval("(3!:3) $expr").lines;
-        return Inline::J::Conversion::gets-data($type, $tally, $dims, @data, |c);
+        return Inline::J::Conversion::gets-data(
+            $type, $tally, $dims, @data, $expr, |c
+        );
     }
 
     method free() {
