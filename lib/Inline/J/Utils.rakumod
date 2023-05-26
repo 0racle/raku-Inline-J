@@ -37,6 +37,10 @@ module Inline::J::Utils {
             |(0 ..^ $buf.bytes ÷ 4).map: -> \i {
                 given $buf.read-uint32(i × 4)  -> \c {
                     when c < 128 { c } 
+                    when c < 2048 {
+                        (192 +| (c +> 6)),
+                        (128 +| (c +& 63))
+                    }
                     when c < 65536 {
                         (224 +| (c +> 12)),
                         (128 +| ((c +> 6) +& 63)),
