@@ -172,35 +172,35 @@ our sub gets-data($type, $tally, $dims, @data, :$raw, :$list) {
     return %(:$elems, :@shape, :$buf, :$datatype) if $raw;
 
     given $datatype {
-        when boolean {
+        when Inline::J::Datatype::boolean {
             return $buf.read-int8(0).Bool if !@shape;
             my $bools = (^$elems).map(-> $o { $buf.read-int8($o).Bool });
             return $list
               ?? batched($bools, :@shape)
               !! shaped($bools, :@shape, :type(Bool))
         }
-        when literal {
+        when Inline::J::Datatype::literal {
             my $str = $buf.decode;
             return $str if !@shape;
             return $list
               ?? batched($str.comb.head($elems), :@shape)
               !! shaped($str.comb.head($elems), :@shape, :type(Str))
         }
-        when integer {
+        when Inline::J::Datatype::integer {
             return $buf.read-int64(0) if !@shape;
             my $ints = (^$elems).map(-> $o { $buf.read-int64($o × 8) });
             return $list
               ?? batched($ints, :@shape)
               !! shaped($ints, :@shape, :type(Int))
         }
-        when floating {
+        when Inline::J::Datatype::floating {
             return $buf.read-num64(0) if !@shape;
             my $nums = (^$elems).map(-> $o { $buf.read-num64($o × 8) });
             return $list
               ?? batched($nums, :@shape)
               !! shaped($nums, :@shape, :type(Num))
         }
-        when unicode {
+        when Inline::J::Datatype::unicode {
             my $str = $buf.decode('UTF-16');
             return $str if !@shape;
             return $list
