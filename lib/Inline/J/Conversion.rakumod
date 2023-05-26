@@ -28,26 +28,32 @@ our sub setm-values($a) {
     my int64 ($type, $data) = do given $a.of {
         when Bool {
             Inline::J::Datatype::boolean,
-            nativecast(Pointer[int8], CArray[int8].new($a.List)).Int;
+            nativecast(Pointer[int64], CArray[int8].new($a.List)).Int;
         }
         when Str {
             my @ords = $a.map(&ord);
-            if @ords.first(* > 255) {  # UTF-16
-                Inline::J::Datatype::unicode,
-                nativecast(Pointer[int16], CArray[int16].new(@ords)).Int;
-            }
-            else {
-                Inline::J::Datatype::literal,
-                nativecast(Pointer[int8], CArray[int8].new(@ords)).Int;
+            given @ords.max -> \n {
+                when n > 65535 {  # UTF-32
+                    Inline::J::Datatype::unicode4,
+                    nativecast(Pointer[int64], CArray[int32].new(@ords)).Int;
+                }
+                when n > 255 {    # UTF-16
+                    Inline::J::Datatype::unicode,
+                    nativecast(Pointer[int64], CArray[int16].new(@ords)).Int;
+                }
+                default {
+                    Inline::J::Datatype::literal,
+                    nativecast(Pointer[int64], CArray[int8].new(@ords)).Int;
+                }
             }
         }
         when Int {
             Inline::J::Datatype::integer,
-            nativecast(Pointer[uint64], CArray[uint64].new($a.List)).Int;
+            nativecast(Pointer[int64], CArray[uint64].new($a.List)).Int;
         }
         when Num {
             Inline::J::Datatype::floating,
-            nativecast(Pointer[num64], CArray[num64].new($a.List)).Int;
+            nativecast(Pointer[int64], CArray[num64].new($a.List)).Int;
         }
         default {
             fail("{Inline::J::Datatype($type)} values are currently unsupported for setm");

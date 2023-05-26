@@ -10,7 +10,7 @@ our constant PRO = Inline::J::Helper::get-profile(BIN);
 
 sub JInit() returns Pointer is native(LIB) { * }
 sub JDo(Pointer, Str) returns int64 is native(LIB) { * }
-sub JGetR(Pointer) returns Str is native(LIB) { * }
+sub JGetR(Pointer) returns CArray[int8] is native(LIB) { * }
 sub JGetA(Pointer, int64, Str) returns int64 is native(LIB) { * }
 sub JFree(Pointer) returns int64 is native(LIB) { * }
 sub JGetLocale(Pointer) returns Str is native(LIB) { * }
@@ -26,8 +26,8 @@ class Inline::J:ver<0.1.1>:auth<zef:elcaro> {
     has Bool $!profile-loaded;
     
     submethod BUILD($!jt=JInit(), :$load-profile) {
-        # Increase output rows (for 3!:3)
-        self.eval('(9!:37) 0 2256 0 2222');
+        # Don't truncate output
+        self.eval('(9!:37) 0 _ 0 _');
         if $load-profile {
             self.load-profile;
         }
@@ -57,16 +57,18 @@ class Inline::J:ver<0.1.1>:auth<zef:elcaro> {
         return self
     }
 
-    method getr() {
-        return JGetR($!jt).chomp
+    method getr(:$raw, :$enc='UTF-8') {
+        my $char = JGetR($!jt);
+        my $buf  = Buf.new($char[0..*].toggle(* ≠ 0));
+        return $raw ?? $buf !! $buf.decode($enc).chomp
     }
 
     method get-locale() {
         return JGetLocale($!jt)
     }
 
-    method eval(|c) {
-        return self.do(|c).getr
+    method eval($expr, *%_) {
+        return self.do($expr).getr(|%_)
     }
 
     method error-text($err) {
@@ -168,6 +170,16 @@ class Inline::J::Noun {
 
     method elems() {
         self!monadic('*/@$').Int
+    }
+
+    method succ {
+        $!ij.eval("$!name =. >: $!name");
+        return self
+    }
+
+    method pred {
+        $!ij.eval("$!name =. <: $!name");
+        return self
     }
 
     method AT-POS(*@n) {
