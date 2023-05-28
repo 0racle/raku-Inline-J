@@ -21,7 +21,7 @@ sub JErrorTextM(Pointer, int64, Pointer[Str] is rw) returns int64 is native(LIB)
 class Inline::J::Noun { ... }
 class Inline::J::Verb { ... }
 
-class Inline::J:ver<0.1.5>:auth<zef:elcaro> {
+class Inline::J:ver<0.2.0>:auth<zef:elcaro> {
     has $!jt;
     has Bool $!profile-loaded;
     
@@ -224,22 +224,30 @@ class Inline::J::Verb does Callable {
     }
 
     multi submethod CALL-ME() {
-        $!ij.noun("($!name) ''")
+        $!ij.noun("$!name ''")
     }
     multi submethod CALL-ME(Inline::J::Noun $y) {
-        $!ij.noun("($!name) $y")
+        $!ij.noun("$!name $y")
     }
     multi submethod CALL-ME(Inline::J::Noun $x, Inline::J::Noun $y) {
-        $!ij.noun("$x ($!name) $y")
+        $!ij.noun("$x $!name $y")
     }
     multi submethod CALL-ME(Real $y) {
-        $!ij.noun("($!name) $y")
+        $!ij.noun("$!name $y")
     }
     multi submethod CALL-ME(Real $x, Real $y) {
-        $!ij.noun("$x ($!name) $y")
+        $!ij.noun("$x $!name $y")
     }
-    multi submethod CALL-ME(Array[Int] $y where *.shape.elems == 1) {
-        $!ij.noun("($!name) ($y)")
+
+    multi submethod CALL-ME(Array $y) {
+        my $ya = $!ij.setm('arg_' ~ random-hex(4), $y);
+        $!ij.noun("$!name $ya")
+    }
+
+    multi submethod CALL-ME(Array $x, Array $y) {
+        my $ya = $!ij.setm('arg_' ~ random-hex(4), $y);
+        my $xa = $!ij.setm('arg_' ~ random-hex(4), $x);
+        $!ij.noun("$xa $!name $ya")
     }
 
     method rank {

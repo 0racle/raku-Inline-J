@@ -226,7 +226,7 @@ shape
 
 Returns a Seq of Ints that count the length (number of items) in each axis.
 
-```
+```raku
 say $m.shape;
 # (2 3 4)
 ```
@@ -290,9 +290,10 @@ say $m[1;0];
 
 Similar to `IJN`'s, an `Inline::J::Verb` (`IJV`) object references a verb defined in J. The object `does Callable` so that it acts like a Raku function.
 
-**LIMITATION:** Currently `IJV` callables only accept `IJN`'s, or Raku `Real` numbers. `Real` are just _stringified_ and interpreted by J.
+Currently `IJV` callables accept 1 or 2 `IJN`'s, 1 or 2 Raku `Real` numbers, or 1 or 2 shaped Raku shaped arrays.
 
-**UPDATE** I've added initial support for passing `Array[Int]`'s lists (_not_ nested lists / matrices).
+`Real`s are just _stringified_ and interpreted by J.
+Shaped `Array`s will be converted to an `IJN` and passed to the verb.
 
 Callables accept 0, 1, or 2 arguments. When calling with 0 arguments, the J function is actually called with the empty string value. `IJV`'s will call `j.noun`, and hence, return an `IJN` which you can (attempt to) convert to a Raku type by calling `.getm` on the returned value.
 
@@ -309,7 +310,26 @@ say f($i, $n);
 # 1 1 1 1 1 0 0 0 0 0
 ```
 
-Verbs also get a random name (if none is provided)
+Example of passing a Raku Array to a J verb
+
+```raku
+# Raku shaped Array
+say my Int @a[4;4] = ([1..4] xx 4);
+# [[1 2 3 4]
+#  [1 2 3 4]
+#  [1 2 3 4]
+#  [1 2 3 4]]
+
+# Passing it to a IJV, returns an IJN
+# Convert back to Raku by calling .getm
+say j.verb('|."_1~ i.@#')(@a).getm;
+# [[1 2 3 4]
+#  [2 3 4 1]
+#  [3 4 1 2]
+#  [4 1 2 3]]
+```
+
+Like `IJN`s, `IJV`'s also get a random name (if none is provided)
 
 ```raku
 my &t = j.verb('|:');
