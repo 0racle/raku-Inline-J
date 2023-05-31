@@ -21,7 +21,7 @@ sub JErrorTextM(Pointer, int64, Pointer[Str] is rw) returns int64 is native(LIB)
 class Inline::J::Noun { ... }
 class Inline::J::Verb { ... }
 
-class Inline::J:ver<0.2.0>:auth<zef:elcaro> {
+class Inline::J:ver<0.2.1>:auth<zef:elcaro> {
     has $!jt;
     has Bool $!profile-loaded;
     
@@ -146,9 +146,9 @@ class Inline::J::Noun {
         $!ij.do($!name).getr;
     }
 
-    method Str {
-        $!name
-    }
+    method Str   { $!name }
+    method Array { self.getm }
+    method List  { self.gets(:list) }
 
     method !monadic($f) {
         $!ij.eval("$f $!name");

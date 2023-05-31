@@ -18,9 +18,10 @@ module Inline::J::Utils {
     }
 
     our sub reshape($a) is exportable {
-        Array.new(shape => infer-shape(|$a), |$a)
+        Array.new($a, shape => infer-shape($a))
     }
-    sub infer-shape($x) {
+
+    our sub infer-shape($x) is exportable {
         $x ~~ List ?? ($x.elems, |infer-shape($x[0])) !! ()
     }
 

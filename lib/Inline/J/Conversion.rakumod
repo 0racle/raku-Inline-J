@@ -8,19 +8,15 @@ use Inline::J::Datatype;
 
 our sub setm-values($a) {
 
-    # XXX unshaped/untyped Arrays currently unsupported
-    # but potentially we can infer the shape / type
-    # requires further testing / development
-
-    # # Assume unshaped Arrays have homogenous shape
-    # if $a.shape.head ~~ Whatever {
-    #     return setm-values(reshape(|$a))
-    # }
-
-    # # Assume untyped Arrays have homogeneous type
-    # if $a.of.^name eq 'Mu' {
-    #     return setm-values(shaped($a, shape => $a.shape, type => $a.head.WHAT));
-    # }
+    # XXX Will attempt to infer shape/type of unshaped/untyped lists
+    # Assume unshaped Arrays have homogenous shape
+    if $a.shape.head ~~ Whatever {
+        return setm-values(reshape($a))
+    }
+    # Assume untyped Arrays have homogeneous type
+    if $a.of.^name eq 'Mu' {
+        return setm-values(shaped($a, shape => $a.shape, type => $a[*].head.WHAT));
+    }
 
     my int64 $rank  = $a.shape.elems;
     my int64 $shape = nativecast(Pointer[int64], CArray[int64].new($a.shape));
