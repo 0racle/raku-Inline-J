@@ -1,4 +1,3 @@
-
 module Inline::J::Helper {
 
     our sub get-binpath {
@@ -6,19 +5,29 @@ module Inline::J::Helper {
             return $bin
         }
 
-        my $test = rx{ :i ^ J90<[1..9]> $ };
+        my $test = rx{ :i ^ J9 [ '0' <[1..3]> || '.' <[4..5]> ] $ };
 
         if $*DISTRO.is-win {
-            for ($*HOME, 'C:/Program Files'.IO) -> $dir {
-                if $dir.dir(:$test) -> @paths {
-                    return @paths.reverse.first.child('bin')
+            my @paths = (
+                $*HOME,
+                %*ENV<USERPROFILE>.?IO,
+                %*ENV<LOCALAPPDATA>.?IO.child('Programs'),
+                %*ENV<HOMEDRIVE>.?IO.child('Program Files'),
+            );
+            for @paths.unique.grep({ .e && .d }) -> $dir {
+                if $dir.dir(:$test).sort(*.basename.subst('j90', 'j9.')) -> @paths {
+                    if @paths.reverse.first.child('bin') -> $bin {
+                        return $bin
+                    }
                 }
             }
         }
         else {
-            for ($*HOME, '/opt'.IO) -> $dir {
-                if $dir.dir(:$test).sort -> @paths {
-                    return @paths.reverse.first.child('bin')
+            for ($*HOME, '/usr/local'.IO, '/opt'.IO).grep({ .e && .d }) -> $dir {
+                if $dir.dir(:$test).sort(*.basename.subst('j90', 'j9.')) -> @paths {
+                    if @paths.reverse.first.child('bin') -> $bin {
+                        return $bin
+                    }
                 }
             }
         }
