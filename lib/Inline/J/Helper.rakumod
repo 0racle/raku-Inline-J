@@ -16,18 +16,14 @@ module Inline::J::Helper {
             );
             for @paths.unique.grep({ .e && .d }) -> $dir {
                 if $dir.dir(:$test).sort(*.basename.subst('j90', 'j9.')) -> @paths {
-                    if @paths.reverse.first.child('bin') -> $bin {
-                        return $bin
-                    }
+                    return @paths.reverse.first.child('bin');
                 }
             }
         }
         else {
             for ($*HOME, '/usr/local'.IO, '/opt'.IO).grep({ .e && .d }) -> $dir {
                 if $dir.dir(:$test).sort(*.basename.subst('j90', 'j9.')) -> @paths {
-                    if @paths.reverse.first.child('bin') -> $bin {
-                        return $bin
-                    }
+                    return @paths.reverse.first.child('bin');
                 }
             }
         }

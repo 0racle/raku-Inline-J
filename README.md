@@ -45,7 +45,8 @@ INSTALLATION
 
 To install this module you need to have J already installed. See the [J Software Wiki](https://code.jsoftware.com/wiki/System/Installation) for more info.
 
-The module will attempt to locate the `bin` path where J shared lib is located. It will search the most common install locations for POSIX or Windows depending on your system. Alternatively, you can export the `bin` location the environment variable `JBINPATH`.
+During installation of this module, it will attempt to locate the `bin` path where J shared lib is located. It will search the most common install locations for POSIX or Windows depending on your system. Alternatively, you can export the `bin` location the environment variable `JBINPATH` before installation.
+
 
 GETTING STARTED
 ===============
