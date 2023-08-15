@@ -1,7 +1,7 @@
 {
     "name": "Inline::J",
     "auth": "zef:elcaro",
-    "version":  "0.2.2",
+    "version":  "0.3.0",
     "api": "1",
     "description": "Use the J programming language inside Raku",
     "tags": [ "Array", "Matrix", "APL" ],
@@ -17,8 +17,7 @@
     },
     "depends": [
         "Exportable",
-        "NativeCall",
-        "NativeHelpers::Blob"
+        "NativeCall"
     ],
     "source-url": "https://github.com/0racle/raku-Inline-J"
 }

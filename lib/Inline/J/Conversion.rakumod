@@ -1,9 +1,9 @@
 unit module Inline::J::Conversion;
 
 use NativeCall;
-use NativeHelpers::Blob;
 
 use Inline::J::Utils < batched shaped reshape hex-unpack utf32-to-utf8 >;
+use Inline::J::NativeHelpers < blob-from-pointer >;
 use Inline::J::Datatype;
 
 our sub setm-values($a) {
