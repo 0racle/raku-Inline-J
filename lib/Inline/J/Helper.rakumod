@@ -2,7 +2,7 @@ module Inline::J::Helper {
 
     our sub get-binpath {
         if %*ENV<JBINPATH> -> $bin {
-            return $bin
+            return $bin.IO
         }
 
         my $test = rx{ :i ^ J9 [ '0' <[1..3]> || '.' <[4..5]> ] $ };
@@ -34,25 +34,25 @@ module Inline::J::Helper {
         END
     }
 
-    our sub get-library($bin) {
+    our sub get-library(IO() $bin) {
         if %*ENV<JLIBRARY> -> $lib {
-            return $lib
+            return $lib.IO
         }
 
         if $*DISTRO.is-win {
-            return "$bin/j.dll"
+            return $bin.child('j.dll')
         }
         else {
-            return "$bin/libj.so"
+            return $bin.child('libj.so')
         }
 
     }
 
-    our sub get-profile($bin) {
+    our sub get-profile(IO() $bin) {
         if %*ENV<JPROFILE> -> $pro {
-            return $pro
+            return $pro.IO
         }
-        return "$bin/profile.ijs"
+        return $bin.child('profile.ijs')
     }
 
 }
