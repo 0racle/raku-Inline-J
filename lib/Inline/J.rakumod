@@ -21,10 +21,10 @@ sub JErrorTextM(Pointer, int64, Pointer[Str] is rw) returns int64 is native(LIB)
 class Inline::J::Noun { ... }
 class Inline::J::Verb { ... }
 
-class Inline::J:ver<0.3.1>:auth<zef:elcaro> {
+class Inline::J:ver<0.4.0>:auth<zef:elcaro> {
     has $!jt;
     has Bool $!profile-loaded;
-    
+
     submethod BUILD($!jt=JInit(), :$load-profile) {
         # Don't truncate output
         self.eval('(9!:37) 0 _ 0 _');
@@ -96,12 +96,12 @@ class Inline::J:ver<0.3.1>:auth<zef:elcaro> {
         return Inline::J::Noun.new(:$name, ij => self);
     }
 
-    method getm($n, :$raw) {
+    method getm($n, *%_) {
         my $error = JGetM($!jt, $n, |my int64 ($type, $rank, $shape, $data));
         if $error ≠ 0 {
             fail("{ self.error-text($error) }: Name does not exist");
         }
-        return Inline::J::Conversion::getm-data($type, $rank, $shape, $data, :$raw);
+        return Inline::J::Conversion::getm-data($type, $rank, $shape, $data, |%_);
     }
 
     #| Parse the data representation given from `(3!:3), rather than use `JGetM`
@@ -146,9 +146,7 @@ class Inline::J::Noun {
         $!ij.do($!name).getr;
     }
 
-    method Str   { $!name }
-    method Array { self.getm }
-    method List  { self.gets(:list) }
+    method Str { $!name }
 
     method !monadic($f) {
         $!ij.eval("$f $!name");
@@ -235,7 +233,7 @@ class Inline::J::Verb does Callable {
     multi submethod CALL-ME(Real $y) {
         $!ij.noun("$!name $y")
     }
-    multi submethod CALL-ME(Real $x, Real $y) {
+    multi submethod CALL-ME(Real $y, Real $x) {
         $!ij.noun("$x $!name $y")
     }
 
@@ -244,10 +242,20 @@ class Inline::J::Verb does Callable {
         $!ij.noun("$!name $ya")
     }
 
-    multi submethod CALL-ME(Array $x, Array $y) {
+    multi submethod CALL-ME(Array $y, Array $x) {
         my $ya = $!ij.setm('arg_' ~ random-hex(4), $y);
         my $xa = $!ij.setm('arg_' ~ random-hex(4), $x);
         $!ij.noun("$xa $!name $ya")
+    }
+
+    multi submethod CALL-ME(Real $y, Array $x) {
+        my $xa = $!ij.setm('arg_' ~ random-hex(4), $x);
+        $!ij.noun("$xa $!name $y")
+    }
+
+    multi submethod CALL-ME(Array $y, Real $x) {
+        my $ya = $!ij.setm('arg_' ~ random-hex(4), $y);
+        $!ij.noun("$x $!name $ya")
     }
 
     method rank {
