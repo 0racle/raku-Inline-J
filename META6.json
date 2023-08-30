@@ -17,7 +17,7 @@
         "Inline::J": "lib/Inline/J.rakumod"
     },
     "depends": [
-        "Exportable:auth<zef:elcaro>"
+        "Exportable"
     ],
     "source-url": "https://github.com/0racle/raku-Inline-J"
 }
