@@ -60,17 +60,17 @@ our sub setm-values($a) {
     return ($type, $rank, $shape, $data);
 }
 
-our sub getm-data($type, $rank, $shape, $data, *%_) {
+our sub getm-data($type, $rank, $shape, $data, :$shaped=True, :$raw) {
     my $shape-buf = blob-from-pointer(Pointer.new($shape), elems => $rank × 8);
     my @shape = (0 ..^ $rank).map(-> $o { $shape-buf.read-int64($o × 8) });
     my $elems = [×] @shape;
-    return getm-conv(Inline::J::Datatype($type), $data, $elems, @shape, |%_);
+    return getm-conv(Inline::J::Datatype($type), $data, $elems, @shape, :$shaped, :$raw);
 
 }
 
 proto sub getm-conv(|) { * }
 
-multi getm-conv(Inline::J::Datatype::boolean, $data, $elems, @shape, :$shaped=True, :$raw) {
+multi getm-conv(Inline::J::Datatype::boolean, $data, $elems, @shape, :$shaped, :$raw) {
     my $buf = blob-from-pointer(Pointer.new($data), :$elems);
     if $raw {
         return %(
@@ -87,7 +87,7 @@ multi getm-conv(Inline::J::Datatype::boolean, $data, $elems, @shape, :$shaped=Tr
       !! batched($bools, :@shape)
 }
 
-multi getm-conv(Inline::J::Datatype::literal, $data, $elems, @shape, :$shaped=True, :$raw) {
+multi getm-conv(Inline::J::Datatype::literal, $data, $elems, @shape, :$shaped, :$raw) {
     my $buf = blob-from-pointer(Pointer.new($data), :$elems);
     if $raw {
         return %(
@@ -104,7 +104,7 @@ multi getm-conv(Inline::J::Datatype::literal, $data, $elems, @shape, :$shaped=Tr
       !! batched($str.comb, :@shape)
 }
 
-multi getm-conv(Inline::J::Datatype::integer, $data, $elems, @shape, :$shaped=True, :$raw) {
+multi getm-conv(Inline::J::Datatype::integer, $data, $elems, @shape, :$shaped, :$raw) {
     my $buf = blob-from-pointer(Pointer.new($data), elems => $elems × 8);
     if $raw {
         return %(
@@ -121,7 +121,7 @@ multi getm-conv(Inline::J::Datatype::integer, $data, $elems, @shape, :$shaped=Tr
       !! batched($ints, :@shape)
 }
 
-multi getm-conv(Inline::J::Datatype::floating, $data, $elems, @shape, :$shaped=True, :$raw) {
+multi getm-conv(Inline::J::Datatype::floating, $data, $elems, @shape, :$shaped, :$raw) {
     my $buf = blob-from-pointer(Pointer.new($data), elems => $elems × 8);
     if $raw {
         return %(
@@ -138,7 +138,7 @@ multi getm-conv(Inline::J::Datatype::floating, $data, $elems, @shape, :$shaped=T
       !! batched($nums, :@shape)
 }
 
-multi getm-conv(Inline::J::Datatype::complex, $data, $elems, @shape, :$shaped=True, :$raw) {
+multi getm-conv(Inline::J::Datatype::complex, $data, $elems, @shape, :$shaped, :$raw) {
     my $buf = blob-from-pointer(Pointer.new($data), elems => $elems × 16);
     if $raw {
         return %(
@@ -155,7 +155,7 @@ multi getm-conv(Inline::J::Datatype::complex, $data, $elems, @shape, :$shaped=Tr
 # TODO Figure out rational data representation
 # multi getm-conv(Inline::J::Datatype::rational, $data, $elems, @shape, *%_) { !!! }
 
-multi getm-conv(Inline::J::Datatype::unicode, $data, $elems, @shape, :$shaped=True, :$raw) {
+multi getm-conv(Inline::J::Datatype::unicode, $data, $elems, @shape, :$shaped, :$raw) {
     my $buf = blob-from-pointer(Pointer.new($data), elems => $elems × 2);
     if $raw {
         return %(
@@ -172,7 +172,7 @@ multi getm-conv(Inline::J::Datatype::unicode, $data, $elems, @shape, :$shaped=Tr
       !! batched($str.comb, :@shape)
 }
 
-multi getm-conv(Inline::J::Datatype::unicode4, $data, $elems, @shape, :$shaped=True, :$raw) {
+multi getm-conv(Inline::J::Datatype::unicode4, $data, $elems, @shape, :$shaped, :$raw) {
     my $buf = blob-from-pointer(Pointer.new($data), elems => $elems × 4);
     if $raw {
         return %(
@@ -186,7 +186,7 @@ multi getm-conv(Inline::J::Datatype::unicode4, $data, $elems, @shape, :$shaped=T
       !! batched($str.comb, :@shape)
 }
 
-multi getm-conv(Inline::J::Datatype::boxed, $data, $elems, @shape, :$shaped=True, :$raw) {
+multi getm-conv(Inline::J::Datatype::boxed, $data, $elems, @shape, :$shaped, :$raw) {
     if $raw {
         return %(
             :$elems, :@shape, :$data,
