@@ -4,9 +4,9 @@ module Inline::J::Utils {
 
     #| accepts: list of values, optional shape
     #| returns: nested Array
-    our sub batched(@a is copy, :@shape is copy) is exportable {
-        for @shape.skip.reverse {
-            @a = @a.batch(@shape.pop).map(*.Array)
+    our sub batched(@a is copy, :@shape) is exportable {
+        for @shape.skip.reverse -> $dim {
+            @a = @a.batch($dim).map(*.Array)
         }
         return @a;
     }
