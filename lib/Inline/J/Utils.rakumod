@@ -3,12 +3,12 @@ use Exportable;
 module Inline::J::Utils {
 
     #| accepts: list of values, optional shape
-    #| returns: batched Seq
-    our sub batched(@a is copy, :@shape) is exportable {
-        for @shape.reverse -> $dim {
-            @a .= batch($dim);
+    #| returns: nested Array
+    our sub batched(@a is copy, :@shape is copy) is exportable {
+        for @shape.skip.reverse {
+            @a = @a.batch(@shape.pop).map(*.Array)
         }
-        return |@a
+        return @a;
     }
 
     #| accepts: list of values, a type, and optional shape

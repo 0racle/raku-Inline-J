@@ -1,7 +1,7 @@
 {
     "name": "Inline::J",
     "auth": "zef:elcaro",
-    "version":  "0.4.4",
+    "version":  "0.4.5",
     "api": "1",
     "description": "Use the J programming language inside Raku",
     "tags": [ "Array", "Matrix", "APL" ],
