@@ -227,33 +227,23 @@ class Inline::J::Verb does Callable {
     multi submethod CALL-ME(Inline::J::Noun $y) {
         $!ij.noun("$!name $y")
     }
-    multi submethod CALL-ME(Inline::J::Noun $x, Inline::J::Noun $y) {
+    multi submethod CALL-ME(Inline::J::Noun $y, Inline::J::Noun $x) {
         $!ij.noun("$x $!name $y")
     }
-    multi submethod CALL-ME(Real $y) {
-        $!ij.noun("$!name $y")
-    }
-    multi submethod CALL-ME(Real $y, Real $x) {
-        $!ij.noun("$x $!name $y")
-    }
-
-    multi submethod CALL-ME(Array $y) {
+    multi submethod CALL-ME(Array() $y) {
         my $ya = $!ij.setm('arg_' ~ random-hex(4), $y);
         $!ij.noun("$!name $ya")
     }
-
-    multi submethod CALL-ME(Array $y, Array $x) {
+    multi submethod CALL-ME(Array() $y, Array() $x) {
         my $ya = $!ij.setm('arg_' ~ random-hex(4), $y);
         my $xa = $!ij.setm('arg_' ~ random-hex(4), $x);
         $!ij.noun("$xa $!name $ya")
     }
-
-    multi submethod CALL-ME(Real $y, Array $x) {
+    multi submethod CALL-ME(Inline::J::Noun $y, Array() $x) {
         my $xa = $!ij.setm('arg_' ~ random-hex(4), $x);
         $!ij.noun("$xa $!name $y")
     }
-
-    multi submethod CALL-ME(Array $y, Real $x) {
+    multi submethod CALL-ME(Array() $y, Inline::J::Noun $x) {
         my $ya = $!ij.setm('arg_' ~ random-hex(4), $y);
         $!ij.noun("$x $!name $ya")
     }

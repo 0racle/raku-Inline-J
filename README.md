@@ -40,6 +40,8 @@ WARNING
 This module is under development. As such, the API is subject to change at any time, and there might be bugs.
 The use of this module in Production is not recommended.
 
+If you insist on using this module on important code during version 0, you should pin the exact point release as I reserve the right to break/change the API at any time before version 1.
+
 INSTALLATION
 ============
 
@@ -289,26 +291,41 @@ say $m[1;0];
 
 ## Inline::J::Verb
 
-Similar to `IJN`'s, an `Inline::J::Verb` (`IJV`) object references a verb defined in J. The object `does Callable` so that it acts like a Raku function.
+Similar to `IJN`'s, an `Inline::J::Verb` (`IJV`) object references a verb defined in J. The object `does Callable` so that it acts like a Raku function. `IJV` callables accept 0, 1 or 2 arguments, and return an `IJN`.
 
-Currently `IJV` callables accept 1 or 2 `IJN`'s, 1 or 2 Raku `Real` numbers, or 1 or 2 shaped Raku shaped arrays.
+When calling with 0 arguments, the J function is actually called with the empty string value.
 
-`Real`s are just _stringified_ and interpreted by J.
-Shaped `Array`s will be converted to an `IJN` and passed to the verb.
-
-Callables accept 0, 1, or 2 arguments. When calling with 0 arguments, the J function is actually called with the empty string value. `IJV`'s will call `j.noun`, and hence, return an `IJN` which you can (attempt to) convert to a Raku type by calling `.getm` on the returned value.
+The arguments can either be an existing `IJN`, or a Raku value that can be converted to a J value: `Bool`, `Int`, `Num`, `Str`, or a homogeneous array of one of those types). Raku types will be coerced to an `Array` and attempted to be converted to an `IJN` before being passed to J.
 
 ```raku
-my &f = j.verb('>:');
+my &v = j.verb('>:');
 
-my $n = j.noun('i. 10');
-my $i = j.noun(4);
+my $y = j.noun('i. 5');
+my $x = j.noun(2);
 
-say f($n);
-# 1 2 3 4 5 6 7 8 9 10
+say v($y);
+# 1 2 3 4 5
 
-say f($i, $n);
-# 1 1 1 1 1 0 0 0 0 0
+say v($y, $x);
+# 0 0 1 1 1
+
+say v($y, $x).getm;
+# [False False True True True]
+```
+
+**LIMITATION:** The underlying method that converts Raku types to J only supports Arrays, so Scalars (J: nouns with no shape) are unu
+coerce to `Array`, are currently unsupported.
+
+**NOTE:** Since version 0.4.0, the `IJV`s `y` argument is always the first argument. This means you will need to explicitly swap the arguments if you are creating infix operators in Raku
+
+```raku
+sub infix:<minus>($x, $y) { j.verb('-')($y, $x) }
+```
+
+Or use `~` (reflex, aka: commute) on the J verb
+
+```raku
+my &infix:<minus> := j.verb('-~');
 ```
 
 Example of passing a Raku Array to a J verb
@@ -448,7 +465,7 @@ say $a.gets;
 # [5 6 7]
 ```
 
-**WARNING:** This relies on string output from J. By default, J truncates to 256 columns and 222 rows. I have increased this arbitrarily by 2000 (to 2256 columns 2222 rows), but if you are trying to `gets` a value where the ASCII representation does not fit into this limitation, it will fail in strange ways. You can always increase the values with `(9!:37)`, but trying to convert values so large is not recommended.
+**WARNING:** This relies on string output from J. By default, J truncates to 256 columns and 222 rows. I have increased this not truncate, but have still run into issues converting arrays of several thousand values.
 
 
 Raku to J

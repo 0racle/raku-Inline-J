@@ -60,17 +60,17 @@ our sub setm-values($a) {
     return ($type, $rank, $shape, $data);
 }
 
-our sub getm-data($type, $rank, $shape, $data, :$list, :$raw) {
+our sub getm-data($type, $rank, $shape, $data, *%_) {
     my $shape-buf = blob-from-pointer(Pointer.new($shape), elems => $rank × 8);
     my @shape = (0 ..^ $rank).map(-> $o { $shape-buf.read-int64($o × 8) });
     my $elems = [×] @shape;
-    return getm-conv(Inline::J::Datatype($type), $data, $elems, @shape, :$list :$raw);
+    return getm-conv(Inline::J::Datatype($type), $data, $elems, @shape, |%_);
 
 }
 
 proto sub getm-conv(|) { * }
 
-multi getm-conv(Inline::J::Datatype::boolean, $data, $elems, @shape, :$list, :$raw) {
+multi getm-conv(Inline::J::Datatype::boolean, $data, $elems, @shape, :$shaped=True, :$raw) {
     my $buf = blob-from-pointer(Pointer.new($data), :$elems);
     if $raw {
         return %(
@@ -82,12 +82,12 @@ multi getm-conv(Inline::J::Datatype::boolean, $data, $elems, @shape, :$list, :$r
         return $buf.read-int8(0).Bool
     }
     my $bools = (0 ..^ $elems).map(-> $o { Bool($buf.read-int8($o)) });
-    return $list
-      ?? batched($bools, :@shape)
-      !! shaped($bools, :@shape, :type(Bool))
+    return $shaped
+      ?? shaped($bools, :@shape, :type(Bool))
+      !! batched($bools, :@shape)
 }
 
-multi getm-conv(Inline::J::Datatype::literal, $data, $elems, @shape, :$list, :$raw) {
+multi getm-conv(Inline::J::Datatype::literal, $data, $elems, @shape, :$shaped=True, :$raw) {
     my $buf = blob-from-pointer(Pointer.new($data), :$elems);
     if $raw {
         return %(
@@ -99,12 +99,12 @@ multi getm-conv(Inline::J::Datatype::literal, $data, $elems, @shape, :$list, :$r
     if !@shape {
         return $str
     }
-    return $list
-      ?? batched($str.comb, :@shape)
-      !! shaped($str.comb, :@shape, :type(Str))
+    return $shaped
+      ?? shaped($str.comb, :@shape, :type(Str))
+      !! batched($str.comb, :@shape)
 }
 
-multi getm-conv(Inline::J::Datatype::integer, $data, $elems, @shape, :$list, :$raw) {
+multi getm-conv(Inline::J::Datatype::integer, $data, $elems, @shape, :$shaped=True, :$raw) {
     my $buf = blob-from-pointer(Pointer.new($data), elems => $elems × 8);
     if $raw {
         return %(
@@ -116,12 +116,12 @@ multi getm-conv(Inline::J::Datatype::integer, $data, $elems, @shape, :$list, :$r
         return $buf.read-int64(0).Int
     }
     my $ints = (0 ..^ $elems).map(-> $o { $buf.read-int64($o × 8) });
-    return $list
-      ?? batched($ints, :@shape)
-      !! shaped($ints, :@shape, :type(Int))
+    return $shaped
+      ?? shaped($ints, :@shape, :type(Int))
+      !! batched($ints, :@shape)
 }
 
-multi getm-conv(Inline::J::Datatype::floating, $data, $elems, @shape, :$list, :$raw) {
+multi getm-conv(Inline::J::Datatype::floating, $data, $elems, @shape, :$shaped=True, :$raw) {
     my $buf = blob-from-pointer(Pointer.new($data), elems => $elems × 8);
     if $raw {
         return %(
@@ -133,12 +133,12 @@ multi getm-conv(Inline::J::Datatype::floating, $data, $elems, @shape, :$list, :$
         return $buf.read-num64(0).Num
     }
     my $nums = (0 ..^ $elems).map(-> $o { $buf.read-num64($o × 8) });
-    return $list
-      ?? batched($nums, :@shape)
-      !! shaped($nums, :@shape, :type(Num))
+    return $shaped
+      ?? shaped($nums, :@shape, :type(Num))
+      !! batched($nums, :@shape)
 }
 
-multi getm-conv(Inline::J::Datatype::complex, $data, $elems, @shape, :$list, :$raw) {
+multi getm-conv(Inline::J::Datatype::complex, $data, $elems, @shape, :$shaped=True, :$raw) {
     my $buf = blob-from-pointer(Pointer.new($data), elems => $elems × 16);
     if $raw {
         return %(
@@ -146,7 +146,7 @@ multi getm-conv(Inline::J::Datatype::complex, $data, $elems, @shape, :$list, :$r
             datatype => Inline::J::Datatype::complex
         )
     }
-    fail("{Inline::J::Datatype::complex} values unsupported. Use :raw");
+    fail("{Inline::J::Datatype::complex} values unsupported.");
 }
 
 # TODO Figure out extended data representation
@@ -155,7 +155,7 @@ multi getm-conv(Inline::J::Datatype::complex, $data, $elems, @shape, :$list, :$r
 # TODO Figure out rational data representation
 # multi getm-conv(Inline::J::Datatype::rational, $data, $elems, @shape, *%_) { !!! }
 
-multi getm-conv(Inline::J::Datatype::unicode, $data, $elems, @shape, :$list, :$raw) {
+multi getm-conv(Inline::J::Datatype::unicode, $data, $elems, @shape, :$shaped=True, :$raw) {
     my $buf = blob-from-pointer(Pointer.new($data), elems => $elems × 2);
     if $raw {
         return %(
@@ -167,12 +167,12 @@ multi getm-conv(Inline::J::Datatype::unicode, $data, $elems, @shape, :$list, :$r
     if !@shape {
         return $str
     }
-    return $list
-      ?? batched($str.comb, :@shape)
-      !! shaped($str.comb, :@shape, :type(Str))
+    return $shaped
+      ?? shaped($str.comb, :@shape, :type(Str))
+      !! batched($str.comb, :@shape)
 }
 
-multi getm-conv(Inline::J::Datatype::unicode4, $data, $elems, @shape, :$list, :$raw) {
+multi getm-conv(Inline::J::Datatype::unicode4, $data, $elems, @shape, :$shaped=True, :$raw) {
     my $buf = blob-from-pointer(Pointer.new($data), elems => $elems × 4);
     if $raw {
         return %(
@@ -181,19 +181,19 @@ multi getm-conv(Inline::J::Datatype::unicode4, $data, $elems, @shape, :$list, :$
         )
     }
     my $str = utf32-to-utf8($buf);
-    return $list
-      ?? batched($str.comb, :@shape)
-      !! shaped($str.comb, :@shape, :type(Str))
+    return $shaped
+      ?? shaped($str.comb, :@shape, :type(Str))
+      !! batched($str.comb, :@shape)
 }
 
-multi getm-conv(Inline::J::Datatype::boxed, $data, $elems, @shape, :$list, :$raw) {
+multi getm-conv(Inline::J::Datatype::boxed, $data, $elems, @shape, :$shaped=True, :$raw) {
     if $raw {
         return %(
             :$elems, :@shape, :$data,
             datatype => Inline::J::Datatype::boxed
         )
     }
-    fail("{Inline::J::Datatype::complex} values unsupported. Use :raw");
+    fail("{Inline::J::Datatype::complex} values unsupported.");
 }
 
 multi getm-conv($type, |c) {
@@ -201,7 +201,7 @@ multi getm-conv($type, |c) {
     fail("$datatype values are currently unsupported for getm");
 }
 
-our sub gets-data($type, $tally, $dims, @data, $expr, :$list, :$raw) {
+our sub gets-data($type, $tally, $dims, @data, $expr, :$shaped=True, :$raw) {
     my $datatype = Inline::J::Datatype(hex-unpack($type));
     my $elems = hex-unpack($tally);
     my @shape = @data.splice(0, hex-unpack($dims)).map(&hex-unpack);
@@ -213,44 +213,44 @@ our sub gets-data($type, $tally, $dims, @data, $expr, :$list, :$raw) {
         when Inline::J::Datatype::boolean {
             return $buf.read-int8(0).Bool if !@shape;
             my $bools = (^$elems).map(-> $o { $buf.read-int8($o).Bool });
-            return $list
-              ?? batched($bools, :@shape)
-              !! shaped($bools, :@shape, :type(Bool))
+            return $shaped
+              ?? shaped($bools, :@shape, :type(Bool))
+              !! batched($bools, :@shape)
         }
         when Inline::J::Datatype::literal {
             my $str = $buf.decode;
             return $str if !@shape;
-            return $list
-              ?? batched($str.comb.head($elems), :@shape)
-              !! shaped($str.comb.head($elems), :@shape, :type(Str))
+            return $shaped
+              ?? shaped($str.comb.head($elems), :@shape, :type(Str))
+              !! batched($str.comb.head($elems), :@shape)
         }
         when Inline::J::Datatype::integer {
             return $buf.read-int64(0) if !@shape;
             my $ints = (^$elems).map(-> $o { $buf.read-int64($o × 8) });
-            return $list
-              ?? batched($ints, :@shape)
-              !! shaped($ints, :@shape, :type(Int))
+            return $shaped
+              ?? shaped($ints, :@shape, :type(Int))
+              !! batched($ints, :@shape)
         }
         when Inline::J::Datatype::floating {
             return $buf.read-num64(0) if !@shape;
             my $nums = (^$elems).map(-> $o { $buf.read-num64($o × 8) });
-            return $list
-              ?? batched($nums, :@shape)
-              !! shaped($nums, :@shape, :type(Num))
+            return $shaped
+              ?? shaped($nums, :@shape, :type(Num))
+              !! batched($nums, :@shape)
         }
         when Inline::J::Datatype::unicode {
             my $str = $buf.decode('UTF-16');
             return $str if !@shape;
-            return $list
-              ?? batched($str.comb.head($elems), :@shape)
-              !! shaped($str.comb.head($elems), :@shape, :type(Str))
+            return $shaped
+              ?? shaped($str.comb.head($elems), :@shape, :type(Str))
+              !! batched($str.comb.head($elems), :@shape)
         }
         when Inline::J::Datatype::unicode4 {
             my $str = utf32-to-utf8($buf);
             return $str if !@shape;
-            return $list
-              ?? batched($str.comb.head($elems), :@shape)
-              !! shaped($str.comb.head($elems), :@shape, :type(Str))
+            return $shaped
+              ?? shaped($str.comb.head($elems), :@shape, :type(Str))
+              !! batched($str.comb.head($elems), :@shape)
         }
         default {
             fail("{$datatype} values are currently unsupported for gets");
