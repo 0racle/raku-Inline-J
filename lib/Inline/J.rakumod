@@ -25,7 +25,7 @@ class Inline::J:ver<0.4.6>:auth<zef:elcaro> {
     has $!jt;
     has Bool $!profile-loaded;
 
-    submethod BUILD($!jt=JInit(), :$load-profile) {
+    submethod BUILD($!jt=JInit(), :$load-profile=True) {
         # Don't truncate output
         self.eval('(9!:37) 0 _ 0 _');
         if $load-profile {
@@ -221,31 +221,52 @@ class Inline::J::Verb does Callable {
         $!name
     }
 
+    # Niladic calls
     multi submethod CALL-ME() {
         $!ij.noun("$!name ''")
+    }
+
+    # Monadic calls
+    multi submethod CALL-ME(Str $y) {
+        self.CALL-ME($y.comb)
+    }
+    multi submethod CALL-ME(Array() $y) {
+        self.CALL-ME($!ij.setm('arg_' ~ random-hex(4), $y))
     }
     multi submethod CALL-ME(Inline::J::Noun $y) {
         $!ij.noun("$!name $y")
     }
-    multi submethod CALL-ME(Inline::J::Noun $y, Inline::J::Noun $x) {
-        $!ij.noun("$x $!name $y")
+
+    # Dyadic calls
+    multi submethod CALL-ME(Str $y, Str $x) {
+        self.CALL-ME($y.comb, $x.comb)
     }
-    multi submethod CALL-ME(Array() $y) {
-        my $ya = $!ij.setm('arg_' ~ random-hex(4), $y);
-        $!ij.noun("$!name $ya")
+    multi submethod CALL-ME(Str $y, Array() $x) {
+        self.CALL-ME($y.comb, $!ij.setm('arg_' ~ random-hex(4), $x))
+    }
+    multi submethod CALL-ME(Str $y, Inline::J::Noun $x) {
+        self.CALL-ME($y.comb, $x)
+    }
+    multi submethod CALL-ME(Array() $y, Str $x) {
+        self.CALL-ME($!ij.setm('arg_' ~ random-hex(4), $y), $x.comb)
     }
     multi submethod CALL-ME(Array() $y, Array() $x) {
-        my $ya = $!ij.setm('arg_' ~ random-hex(4), $y);
-        my $xa = $!ij.setm('arg_' ~ random-hex(4), $x);
-        $!ij.noun("$xa $!name $ya")
-    }
-    multi submethod CALL-ME(Inline::J::Noun $y, Array() $x) {
-        my $xa = $!ij.setm('arg_' ~ random-hex(4), $x);
-        $!ij.noun("$xa $!name $y")
+        self.CALL-ME(
+            $!ij.setm('arg_' ~ random-hex(4), $y),
+            $!ij.setm('arg_' ~ random-hex(4), $x)
+        )
     }
     multi submethod CALL-ME(Array() $y, Inline::J::Noun $x) {
-        my $ya = $!ij.setm('arg_' ~ random-hex(4), $y);
-        $!ij.noun("$x $!name $ya")
+        self.CALL-ME($!ij.setm('arg_' ~ random-hex(4), $y), $x)
+    }
+    multi submethod CALL-ME(Inline::J::Noun $y, Str $x) {
+        self.CALL-ME($y, $x.comb)
+    }
+    multi submethod CALL-ME(Inline::J::Noun $y, Array() $x) {
+        self.CALL-ME($y, $!ij.setm('arg_' ~ random-hex(4), $x))
+    }
+    multi submethod CALL-ME(Inline::J::Noun $y, Inline::J::Noun $x) {
+        $!ij.noun("$x $!name $y")
     }
 
     method rank {
