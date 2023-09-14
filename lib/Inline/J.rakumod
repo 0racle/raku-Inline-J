@@ -21,7 +21,7 @@ sub JErrorTextM(Pointer, int64, Pointer[Str] is rw) returns int64 is native(LIB)
 class Inline::J::Noun { ... }
 class Inline::J::Verb { ... }
 
-class Inline::J:ver<0.4.6>:auth<zef:elcaro> {
+class Inline::J:ver<0.4.8>:auth<zef:elcaro> {
     has $!jt;
     has Bool $!profile-loaded;
 
