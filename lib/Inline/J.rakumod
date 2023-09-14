@@ -83,8 +83,11 @@ class Inline::J:ver<0.4.8>:auth<zef:elcaro> {
         return Inline::J::Noun.new(:$name, ij => self);
     }
 
-    method verb($init, :$name) {
+    multi method verb($init, :$name) {
         return Inline::J::Verb.new(:$init, :$name, ij => self);
+    }
+    multi method verb(:$name) {
+        return Inline::J::Verb.new(:$name, ij => self);
     }
 
     method setm(Str $name, Array $a) {
@@ -211,7 +214,9 @@ class Inline::J::Verb does Callable {
 
     submethod BUILD(:$!name, :$!init, :$!ij) {
         $!name ||= 'ijv_' ~ random-hex(4);
-        $!ij.do("$!name =: $!init");
+        if $!init {
+            $!ij.do("$!name =: $!init");
+        }
         if $!ij.eval("(4!:0) < '$!name'") ≠ 3 {
             die('Not a verb')
         }
