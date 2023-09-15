@@ -91,7 +91,6 @@ class Inline::J:ver<0.4.8>:auth<zef:elcaro> {
     }
 
     multi method setm(Str $name, Array $a) {
-        say $name;
         my int64 ($type, $rank, $shape, $data) = Inline::J::Conversion::setm-values($a);
         my $error = JSetM($!jt, $name, $type, $rank, $shape, $data);
         if $error ≠ 0 {
@@ -225,6 +224,11 @@ class Inline::J::Verb does Callable {
         if $!ij.eval("(4!:0) < '$!name'") ≠ 3 {
             die('Not a verb')
         }
+    }
+
+    multi method gist(::?CLASS:D:) {
+        my $repr = $!ij.eval("(5!:5) < '$!name'");
+        "{$?CLASS.^name}.new(init => '$repr')"
     }
 
     method Str {
