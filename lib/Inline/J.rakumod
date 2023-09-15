@@ -90,13 +90,18 @@ class Inline::J:ver<0.4.8>:auth<zef:elcaro> {
         return Inline::J::Verb.new(:$name, ij => self);
     }
 
-    method setm(Str $name, Array $a) {
+    multi method setm(Str $name, Array $a) {
+        say $name;
         my int64 ($type, $rank, $shape, $data) = Inline::J::Conversion::setm-values($a);
         my $error = JSetM($!jt, $name, $type, $rank, $shape, $data);
         if $error ≠ 0 {
             fail(self.error-text($error));
         }
         return Inline::J::Noun.new(:$name, ij => self);
+    }
+
+    multi method setm(Array $a, Str :$name=random-name()) {
+        self.setm($name, $a)
     }
 
     method getm($n, *%_) {
@@ -129,8 +134,8 @@ class Inline::J:ver<0.4.8>:auth<zef:elcaro> {
 
 }
 
-my sub random-hex(\n) {
-    (0..255).roll(n).map(*.fmt('%02x')).join;
+my sub random-name {
+    'ij_' ~ (1e8.rand.floor)
 }
 
 class Inline::J::Noun {
@@ -139,7 +144,7 @@ class Inline::J::Noun {
     has Inline::J $!ij;
 
     submethod BUILD(:$!name, :$!init, :$!ij) {
-        $!name ||= 'ijn_' ~ random-hex(4);
+        $!name ||= random-name();
         if $!init {
             $!ij.do("$!name =. $!init");
         }
@@ -197,7 +202,7 @@ class Inline::J::Noun {
     }
 
     method setm(|c) {
-        $!ij.setm($!name, |c);
+        $!ij.setm(:$!name, |c);
     }
 
     #| Erases name in J
@@ -213,7 +218,7 @@ class Inline::J::Verb does Callable {
     has Inline::J $!ij;
 
     submethod BUILD(:$!name, :$!init, :$!ij) {
-        $!name ||= 'ijv_' ~ random-hex(4);
+        $!name ||= random-name();
         if $!init {
             $!ij.do("$!name =: $!init");
         }
@@ -236,7 +241,7 @@ class Inline::J::Verb does Callable {
         self.CALL-ME($y.comb)
     }
     multi submethod CALL-ME(Array() $y) {
-        self.CALL-ME($!ij.setm('arg_' ~ random-hex(4), $y))
+        self.CALL-ME($!ij.setm($y))
     }
     multi submethod CALL-ME(Inline::J::Noun $y) {
         $!ij.noun("$!name $y")
@@ -247,28 +252,25 @@ class Inline::J::Verb does Callable {
         self.CALL-ME($y.comb, $x.comb)
     }
     multi submethod CALL-ME(Str $y, Array() $x) {
-        self.CALL-ME($y.comb, $!ij.setm('arg_' ~ random-hex(4), $x))
+        self.CALL-ME($y.comb, $!ij.setm($x))
     }
     multi submethod CALL-ME(Str $y, Inline::J::Noun $x) {
         self.CALL-ME($y.comb, $x)
     }
     multi submethod CALL-ME(Array() $y, Str $x) {
-        self.CALL-ME($!ij.setm('arg_' ~ random-hex(4), $y), $x.comb)
+        self.CALL-ME($!ij.setm($y), $x.comb)
     }
     multi submethod CALL-ME(Array() $y, Array() $x) {
-        self.CALL-ME(
-            $!ij.setm('arg_' ~ random-hex(4), $y),
-            $!ij.setm('arg_' ~ random-hex(4), $x)
-        )
+        self.CALL-ME($!ij.setm($y), $!ij.setm($x))
     }
     multi submethod CALL-ME(Array() $y, Inline::J::Noun $x) {
-        self.CALL-ME($!ij.setm('arg_' ~ random-hex(4), $y), $x)
+        self.CALL-ME($!ij.setm($y), $x)
     }
     multi submethod CALL-ME(Inline::J::Noun $y, Str $x) {
         self.CALL-ME($y, $x.comb)
     }
     multi submethod CALL-ME(Inline::J::Noun $y, Array() $x) {
-        self.CALL-ME($y, $!ij.setm('arg_' ~ random-hex(4), $x))
+        self.CALL-ME($y, $!ij.setm($x))
     }
     multi submethod CALL-ME(Inline::J::Noun $y, Inline::J::Noun $x) {
         $!ij.noun("$x $!name $y")
