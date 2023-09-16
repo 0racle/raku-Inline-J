@@ -10,7 +10,7 @@ our constant PRO = Inline::J::Helper::get-profile(BIN);
 
 sub JInit() returns Pointer is native(LIB) { * }
 sub JDo(Pointer, Str) returns int64 is native(LIB) { * }
-sub JGetR(Pointer) returns CArray[int8] is native(LIB) { * }
+sub JGetR(Pointer) returns Str is native(LIB) { * }
 sub JGetA(Pointer, int64, Str) returns int64 is native(LIB) { * }
 sub JFree(Pointer) returns int64 is native(LIB) { * }
 sub JGetLocale(Pointer) returns Str is native(LIB) { * }
@@ -57,11 +57,8 @@ class Inline::J:ver<0.4.8>:auth<zef:elcaro> {
         return self
     }
 
-    method getr(:$raw, :$enc='UTF-8') {
-        my $char = JGetR($!jt);
-        my $buf  = Buf.new($char[0..*].toggle(* ≠ 0));
-        return $raw ?? $buf !! $buf.decode($enc).chomp
-
+    method getr() {
+        JGetR($!jt).chomp;
     }
 
     method get-locale() {
