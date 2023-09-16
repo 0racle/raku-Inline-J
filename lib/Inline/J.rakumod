@@ -61,6 +61,7 @@ class Inline::J:ver<0.4.8>:auth<zef:elcaro> {
         my $char = JGetR($!jt);
         my $buf  = Buf.new($char[0..*].toggle(* ≠ 0));
         return $raw ?? $buf !! $buf.decode($enc).chomp
+
     }
 
     method get-locale() {
@@ -88,6 +89,24 @@ class Inline::J:ver<0.4.8>:auth<zef:elcaro> {
     }
     multi method verb(:$name) {
         return Inline::J::Verb.new(:$name, ij => self);
+    }
+
+    multi method def($init, :$name=random-name()) {
+        self.do("$name =: $init");
+        self.def(:$name);
+    }
+    multi method def(:$name) {
+        given self.eval("'idnacvu' \{~ (2&+)\@(4!:0) < '$name'") {
+            when '1' { self.def(:$name) }  # This randomly happens
+            when 'i' { fail("Invalid name '$name'") }
+            when 'd' { fail("Undefined name '$name'") }
+            when 'n' { Inline::J::Noun.new(:$name, ij => self) }
+            when 'a' { fail('Adverbs currently not supported') }
+            when 'c' { fail('Conjunctions currently not supported') }
+            when 'v' { Inline::J::Verb.new(:$name, ij => self) }
+            when 'u' { fail('Unknown name') }
+            default  { die("Unexpected failure") }
+        }
     }
 
     multi method setm(Str $name, Array $a) {
