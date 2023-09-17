@@ -6,7 +6,23 @@ use Inline::J::Utils < batched shaped reshape hex-unpack utf32-to-utf8 >;
 use Inline::J::NativeHelpers < blob-from-pointer >;
 use Inline::J::Datatype;
 
-our sub setm-values($a) {
+our proto setm-values(|) {*}
+
+multi sub setm-values(Int $n) {
+    return (Inline::J::Datatype::integer, 0, 0,
+            nativecast(Pointer, CArray[uint64].new($n.List)).Int);
+}
+
+multi sub setm-values(Num(Real) $n) {
+    return (Inline::J::Datatype::floating, 0, 0,
+            nativecast(Pointer, CArray[num64].new($n.List)).Int);
+}
+
+multi sub setm-values(Str $s) {
+    return setm-values($s.comb);
+}
+
+multi sub setm-values(Array() $a) {
 
     # XXX Will attempt to infer shape/type of unshaped/untyped lists
     # Assume unshaped Arrays have homogenous shape
@@ -19,37 +35,37 @@ our sub setm-values($a) {
     }
 
     my int64 $rank  = $a.shape.elems;
-    my int64 $shape = nativecast(Pointer[int64], CArray[int64].new($a.shape));
+    my int64 $shape = nativecast(Pointer, CArray[int64].new($a.shape));
 
     my int64 ($type, $data) = do given $a.of {
         when Bool {
             Inline::J::Datatype::boolean,
-            nativecast(Pointer[int64], CArray[int8].new($a.List)).Int;
+            nativecast(Pointer, CArray[int8].new($a.List)).Int;
         }
         when Str {
             my @ords = $a.map(&ord);
             given @ords.max -> \n {
                 when n > 65535 {  # UTF-32
                     Inline::J::Datatype::unicode4,
-                    nativecast(Pointer[int64], CArray[int32].new(@ords)).Int;
+                    nativecast(Pointer, CArray[int32].new(@ords)).Int;
                 }
                 when n > 255 {    # UTF-16
                     Inline::J::Datatype::unicode,
-                    nativecast(Pointer[int64], CArray[int16].new(@ords)).Int;
+                    nativecast(Pointer, CArray[int16].new(@ords)).Int;
                 }
                 default {
                     Inline::J::Datatype::literal,
-                    nativecast(Pointer[int64], CArray[int8].new(@ords)).Int;
+                    nativecast(Pointer, CArray[int8].new(@ords)).Int;
                 }
             }
         }
         when Int {
             Inline::J::Datatype::integer,
-            nativecast(Pointer[int64], CArray[uint64].new($a.List)).Int;
+            nativecast(Pointer, CArray[uint64].new($a.List)).Int;
         }
         when Num {
             Inline::J::Datatype::floating,
-            nativecast(Pointer[int64], CArray[num64].new($a.List)).Int;
+            nativecast(Pointer, CArray[num64].new($a.List)).Int;
         }
         default {
             my $datatype = Inline::J::Datatype($type);

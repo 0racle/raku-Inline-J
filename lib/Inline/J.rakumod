@@ -106,7 +106,7 @@ class Inline::J:ver<0.5.0>:auth<zef:elcaro> {
         }
     }
 
-    multi method setm(Str $name, Array $a) {
+    multi method setm(Str $name, Any:D $a) {
         my int64 ($type, $rank, $shape, $data) = Inline::J::Conversion::setm-values($a);
         my $error = JSetM($!jt, $name, $type, $rank, $shape, $data);
         if $error ≠ 0 {
@@ -115,7 +115,7 @@ class Inline::J:ver<0.5.0>:auth<zef:elcaro> {
         return Inline::J::Noun.new(:$name, ij => self);
     }
 
-    multi method setm(Array $a, Str :$name=random-name()) {
+    multi method setm(Any:D $a, Str :$name=random-name()) {
         self.setm($name, $a)
     }
 
@@ -257,43 +257,25 @@ class Inline::J::Verb does Callable {
     }
 
     # Monadic calls
-    multi submethod CALL-ME(Str $y) {
-        self.CALL-ME($y.comb)
-    }
-    multi submethod CALL-ME(Array() $y) {
-        self.CALL-ME($!ij.setm($y))
-    }
     multi submethod CALL-ME(Inline::J::Noun $y) {
         $!ij.noun("$!name $y")
     }
+    multi submethod CALL-ME(Any $y) {
+        self.CALL-ME($!ij.setm($y))
+    }
 
     # Dyadic calls
-    multi submethod CALL-ME(Str $y, Str $x) {
-        self.CALL-ME($y.comb, $x.comb)
-    }
-    multi submethod CALL-ME(Str $y, Array() $x) {
-        self.CALL-ME($y.comb, $!ij.setm($x))
-    }
-    multi submethod CALL-ME(Str $y, Inline::J::Noun $x) {
-        self.CALL-ME($y.comb, $x)
-    }
-    multi submethod CALL-ME(Array() $y, Str $x) {
-        self.CALL-ME($!ij.setm($y), $x.comb)
-    }
-    multi submethod CALL-ME(Array() $y, Array() $x) {
-        self.CALL-ME($!ij.setm($y), $!ij.setm($x))
-    }
-    multi submethod CALL-ME(Array() $y, Inline::J::Noun $x) {
-        self.CALL-ME($!ij.setm($y), $x)
-    }
-    multi submethod CALL-ME(Inline::J::Noun $y, Str $x) {
-        self.CALL-ME($y, $x.comb)
-    }
-    multi submethod CALL-ME(Inline::J::Noun $y, Array() $x) {
-        self.CALL-ME($y, $!ij.setm($x))
-    }
     multi submethod CALL-ME(Inline::J::Noun $y, Inline::J::Noun $x) {
         $!ij.noun("$x $!name $y")
+    }
+    multi submethod CALL-ME(Inline::J::Noun $y, Any $x) {
+        self.CALL-ME($y, $!ij.setm($x))
+    }
+    multi submethod CALL-ME(Any $y, Inline::J::Noun $x) {
+        self.CALL-ME($!ij.setm($y), $x)
+    }
+    multi submethod CALL-ME(Any $y, Any $x) {
+        self.CALL-ME($!ij.setm($y), $!ij.setm($x))
     }
 
     method rank {
