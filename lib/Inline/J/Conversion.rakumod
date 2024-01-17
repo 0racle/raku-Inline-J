@@ -84,6 +84,10 @@ our sub getm-data($type, $rank, $shape, $data, :$shaped=True, :$raw) {
 
 }
 
+our sub geta-data($type, $data, $elems, @shape, :$shaped=True, :$raw) {
+    return getm-conv(Inline::J::Datatype($type), $data, $elems, @shape, :$shaped, :$raw);
+}
+
 proto sub getm-conv(|) { * }
 
 multi getm-conv(Inline::J::Datatype::boolean, $data, $elems, @shape, :$shaped, :$raw) {
@@ -120,18 +124,22 @@ multi getm-conv(Inline::J::Datatype::literal, $data, $elems, @shape, :$shaped, :
       !! batched($str.comb, :@shape)
 }
 
-multi getm-conv(Inline::J::Datatype::integer, $data, $elems, @shape, :$shaped, :$raw) {
+multi getm-conv(Inline::J::Datatype::integer, Int $data, $elems, @shape, :$shaped, :$raw) {
     my $buf = blob-from-pointer(Pointer.new($data), elems => $elems × 8);
+    getm-conv(Inline::J::Datatype::integer, $buf, $elems, @shape, :$shaped, :$raw)
+}
+
+multi getm-conv(Inline::J::Datatype::integer, Buf $data, $elems, @shape, :$shaped, :$raw) {
     if $raw {
         return %(
-            :$elems, :@shape, :$buf,
+            :$elems, :@shape, :$data,
             datatype => Inline::J::Datatype::Datatype::integer
         )
     }
     if !@shape {
-        return $buf.read-int64(0).Int
+        return $data.read-int64(0).Int
     }
-    my $ints = (0 ..^ $elems).map(-> $o { $buf.read-int64($o × 8) });
+    my $ints = (0 ..^ $elems).map(-> $o { $data.read-int64($o × 8) });
     return $shaped
       ?? shaped($ints, :@shape, :type(Int))
       !! batched($ints, :@shape)

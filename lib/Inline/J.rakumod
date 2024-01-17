@@ -11,7 +11,7 @@ our constant PRO = Inline::J::Helper::get-profile(BIN);
 sub JInit() returns Pointer is native(LIB) { * }
 sub JDo(Pointer, Str) returns int64 is native(LIB) { * }
 sub JGetR(Pointer) returns Str is native(LIB) { * }
-sub JGetA(Pointer, int64, Str) returns int64 is native(LIB) { * }
+sub JGetA(Pointer, int64, Str) returns CArray[uint8] is native(LIB) { * }
 sub JFree(Pointer) returns int64 is native(LIB) { * }
 sub JGetLocale(Pointer) returns Str is native(LIB) { * }
 sub JGetM(Pointer, Str, int64 is rw, int64 is rw, int64 is rw, int64 is rw) returns int64 is native(LIB) { * } 
@@ -127,6 +127,21 @@ class Inline::J:ver<0.5.1>:auth<zef:elcaro> {
         return Inline::J::Conversion::getm-data($type, $rank, $shape, $data, |%_);
     }
 
+    method geta($n, *%_) {
+        my @a := JGetA($!jt, $n.chars, $n);
+        my $offset   = @a[8 × 0];
+        my $data-end = $offset + @a[8 × 7];
+        my $type     = @a[ $offset + 8 × 1 ];
+        my $elems    = @a[ $offset + 8 × 2 ];
+        my $rank     = @a[ $offset + 8 × 3 ];
+        my @shape    = (4 ..^ 4 + $rank).map: {
+            @a[$offset + 8 × $_]
+        }
+        my $data-init = $offset + 8 × (4 + $rank);
+        my $data = Buf.new: @a[ $data-init ..^ $data-end ];
+        return Inline::J::Conversion::geta-data($type, $data, $elems, @shape, |%_);
+    }
+
     #| Parse the data representation given from `(3!:3), rather than use `JGetM`
     #| This allows the ability to return Raku data structures from J expressions
     #| without first having to define a noun on the J side
@@ -211,6 +226,9 @@ class Inline::J::Noun {
 
     method getm(|c) {
         $!ij.getm($!name, |c);
+    }
+    method geta(|c) {
+        $!ij.geta($!name, |c);
     }
     method gets(|c) {
         $!ij.gets($!name, |c);
